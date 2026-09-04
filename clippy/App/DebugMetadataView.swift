@@ -18,7 +18,7 @@ struct DebugMetadataView: View {
             List {
                 if let loadError {
                     Text("Error: \(loadError)")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(.secondary)
                 }
                 ForEach(items) { item in
                     row(for: item)
@@ -46,7 +46,7 @@ struct DebugMetadataView: View {
                         .font(.caption2.bold())
                         .foregroundStyle(.white)
                         .padding(.horizontal, 6)
-                        .background(Color.red)
+                        .background(Color(white: 0.22))
                         .clipShape(Capsule())
                 }
                 if item.isEncrypted {
@@ -54,7 +54,7 @@ struct DebugMetadataView: View {
                         .font(.caption2.bold())
                         .foregroundStyle(.white)
                         .padding(.horizontal, 6)
-                        .background(Color.blue)
+                        .background(Color(white: 0.22))
                         .clipShape(Capsule())
                 }
                 Spacer()

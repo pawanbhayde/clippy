@@ -135,6 +135,14 @@ final class ClipboardMonitor {
 
             // Persist content (encrypted at rest if sensitive)
             item.storagePath = try persist(payload: payload, for: item)
+            if case .image(let data) = payload {
+                if let (thumbImage, thumbData) = ImageCache.shared.downsample(data: data, maxDimension: 350) {
+                    if let thumbURL = try? AssetStore.writeThumbnail(thumbData, for: item.id, format: .jpg) {
+                        item.thumbnailPath = thumbURL.path
+                        ImageCache.shared.store(thumbImage, for: item.id.uuidString)
+                    }
+                }
+            }
             items.append(item)
             try MetadataStore.save(items)
             onNewItem?(item)

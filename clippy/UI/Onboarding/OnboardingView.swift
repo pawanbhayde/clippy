@@ -34,12 +34,9 @@ struct OnboardingView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.accentColor, Color.blue.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+                    .fill(Color(white: 0.18))
+                    .overlay(
+                        Circle().stroke(Color.white.opacity(0.15), lineWidth: 1)
                     )
                     .frame(width: 60, height: 60)
 
@@ -65,21 +62,18 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 14) {
             featureRow(
                 icon: "menubar.dock.rectangle",
-                color: .blue,
                 title: "Top-Edge Shelf & ⌘⇧V",
                 subtitle: "Hover under the notch/menu bar or press ⌘⇧V to instantly reveal your clipboard shelf."
             )
 
             featureRow(
                 icon: "lock.shield",
-                color: .indigo,
                 title: "At-Rest CryptoKit Encryption",
                 subtitle: "Sensitive credentials, passwords, and API keys are automatically encrypted using macOS Keychain."
             )
 
             featureRow(
                 icon: "curlybraces",
-                color: .green,
                 title: "Developer Mode",
                 subtitle: "Contextual actions on connection strings and JSON: TypeScript interfaces, Zod schemas, and .env generation."
             )
@@ -88,11 +82,11 @@ struct OnboardingView: View {
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.secondary.opacity(0.08)))
     }
 
-    private func featureRow(icon: String, color: Color, title: String, subtitle: String) -> some View {
+    private func featureRow(icon: String, title: String, subtitle: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(color)
+                .foregroundStyle(Color.white)
                 .frame(width: 26, height: 26)
 
             VStack(alignment: .leading, spacing: 2) {
@@ -121,11 +115,11 @@ struct OnboardingView: View {
                 if isAccessibilityGranted {
                     Label("Granted", systemImage: "checkmark.circle.fill")
                         .font(.caption.bold())
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.white)
                 } else {
                     Label("Action Required", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption.bold())
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color(white: 0.8))
                 }
             }
 
@@ -156,11 +150,11 @@ struct OnboardingView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isAccessibilityGranted ? Color.green.opacity(0.08) : Color.orange.opacity(0.08))
+                .fill(Color.white.opacity(0.06))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(isAccessibilityGranted ? Color.green.opacity(0.3) : Color.orange.opacity(0.3), lineWidth: 1)
+                .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
         )
     }
 

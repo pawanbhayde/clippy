@@ -120,7 +120,7 @@ private struct ExcludedAppRow: View {
 
             Button(action: onRemove) {
                 Image(systemName: "trash")
-                    .foregroundColor(.red.opacity(0.8))
+                    .foregroundColor(.secondary)
             }
             .buttonStyle(.plain)
         }

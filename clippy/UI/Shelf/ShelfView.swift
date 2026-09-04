@@ -161,18 +161,18 @@ private struct QueueCollapsedPill: View {
         HStack(spacing: 6) {
             if queueManager.isCompletedFeedback {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                    .foregroundColor(.white)
                     .font(.system(size: 11, weight: .bold))
                 Text("Done")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.white)
             } else {
                 Circle()
-                    .fill(Color.orange)
+                    .fill(Color.white)
                     .frame(width: 7, height: 7)
                 Image(systemName: "list.number")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(.white)
                 Text("\(queueManager.queue.count)")
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white)
@@ -185,7 +185,7 @@ private struct QueueCollapsedPill: View {
                 .fill(Color.black)
                 .shadow(color: Color.black.opacity(0.5), radius: 6, x: 0, y: 2)
                 .overlay(
-                    Capsule().stroke(Color.orange.opacity(0.5), lineWidth: 1)
+                    Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1)
                 )
         )
         .frame(height: 24)
@@ -201,11 +201,11 @@ private struct QueueActiveStrip: View {
         HStack(spacing: 10) {
             HStack(spacing: 6) {
                 Circle()
-                    .fill(Color.orange)
+                    .fill(Color.white)
                     .frame(width: 8, height: 8)
                 Text("QUEUE ACTIVE")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(.orange)
+                    .foregroundColor(.white)
 
                 Text("• \(queueManager.queue.count) items ready to paste (⌘V)")
                     .font(.system(size: 11, weight: .medium))
@@ -266,10 +266,10 @@ private struct QueueActiveStrip: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.orange.opacity(0.15))
+                .fill(Color.white.opacity(0.08))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
                 )
         )
     }

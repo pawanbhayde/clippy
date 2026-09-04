@@ -29,6 +29,9 @@ struct ClipboardGrid: View {
                                         store.activate(activatedItem)
                                         onCopied?(activatedItem)
                                     },
+                                    onDragStarted: { draggedItem in
+                                        store.activate(draggedItem)
+                                    },
                                     onToggleFavorite: { favoritedItem in
                                         store.toggleFavorite(favoritedItem)
                                     }

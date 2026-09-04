@@ -52,10 +52,10 @@ struct SearchBar: View {
                 } label: {
                     Image(systemName: isFavoritesActive ? "star.fill" : "star")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(isFavoritesActive ? Color.yellow : Color(white: 0.75))
+                        .foregroundStyle(isFavoritesActive ? Color.white : Color(white: 0.75))
                         .frame(width: 30, height: 30)
                         .background(
-                            Circle().fill(isFavoritesActive ? Color.yellow.opacity(0.25) : Color(white: 0.16))
+                            Circle().fill(isFavoritesActive ? Color.white.opacity(0.25) : Color(white: 0.16))
                         )
                 }
                 .buttonStyle(.plain)
@@ -68,18 +68,18 @@ struct SearchBar: View {
                     ZStack(alignment: .topTrailing) {
                         Image(systemName: "list.number")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(isQueueActive ? Color.orange : Color(white: 0.75))
+                            .foregroundStyle(isQueueActive ? Color.white : Color(white: 0.75))
                             .frame(width: 30, height: 30)
                             .background(
-                                Circle().fill(isQueueActive ? Color.orange.opacity(0.25) : Color(white: 0.16))
+                                Circle().fill(isQueueActive ? Color.white.opacity(0.25) : Color(white: 0.16))
                             )
 
                         if queueCount > 0 {
                             Text("\(queueCount)")
                                 .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color.black)
                                 .frame(width: 14, height: 14)
-                                .background(Circle().fill(Color.orange))
+                                .background(Circle().fill(Color.white))
                                 .offset(x: 4, y: -4)
                         }
                     }

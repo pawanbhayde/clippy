@@ -11,6 +11,7 @@ enum AssetStore {
     enum ImageFormat: String {
         case webp
         case png
+        case jpg = "jpg"
     }
 
     // MARK: Text content (items/)

@@ -30,11 +30,13 @@ final class ShelfWindow: NSPanel {
         hasShadow = false
     }
 
-    /// Borderless windows default to `canBecomeKey == false`. Overridden so
-    /// the panel can still accept keyboard events (arrow-key navigation,
-    /// Enter, Esc) while expanded — `.nonactivatingPanel` already keeps this
-    /// from activating the app or stealing focus from whatever was frontmost.
-    override var canBecomeKey: Bool { true }
+    /// Dynamically controls whether the panel can accept keyboard focus.
+    /// While expanded, this is true so arrow keys and shortcuts work.
+    /// The instant the shelf collapses or an item is clicked to paste,
+    /// this is set to false so the target app immediately regains key focus.
+    var canReceiveKeyFocus: Bool = false
+
+    override var canBecomeKey: Bool { canReceiveKeyFocus }
 
     /// Moves the panel to the top-center of the active screen, just below
     /// the notch/menu bar.

@@ -16,6 +16,8 @@ final class ShelfController {
     private let animationState = ShelfAnimationState()
     private let clipboardStore = ClipboardStore()
     private var previousApp: NSRunningApplication?
+    private var workspaceObserver: Any?
+    private var dropObserver: Any?
 
     init(mouseTracker: MouseTracker? = nil, globalShortcut: GlobalShortcut? = nil) {
         self.mouseTracker = mouseTracker ?? MouseTracker()
@@ -43,6 +45,34 @@ final class ShelfController {
         self.mouseTracker.onExpand = { [weak self] in self?.expand() }
         self.mouseTracker.onCollapse = { [weak self] in self?.collapse() }
         self.globalShortcut.onToggle = { [weak self] in self?.toggle() }
+
+        // Track active application changes system-wide so previousApp is always up-to-date
+        self.workspaceObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self else { return }
+            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+               app.processIdentifier != NSRunningApplication.current.processIdentifier,
+               app.activationPolicy == .regular {
+                self.previousApp = app
+            }
+        }
+        if let current = NSWorkspace.shared.frontmostApplication,
+           current.processIdentifier != NSRunningApplication.current.processIdentifier,
+           current.activationPolicy == .regular {
+            self.previousApp = current
+        }
+
+        // Collapse shelf cleanly when a drag-and-drop operation completes into a target app
+        self.dropObserver = NotificationCenter.default.addObserver(
+            forName: .shelfShouldCollapseAfterDrop,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.collapseImmediately()
+        }
     }
 
     /// Anchors the panel top-center on the active screen, shows the
@@ -55,9 +85,26 @@ final class ShelfController {
     }
 
     func stop() {
+        if let workspaceObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
+            self.workspaceObserver = nil
+        }
+        if let dropObserver {
+            NotificationCenter.default.removeObserver(dropObserver)
+            self.dropObserver = nil
+        }
         mouseTracker.stop()
         globalShortcut.stop()
         panel.orderOut(nil)
+    }
+
+    deinit {
+        if let workspaceObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
+        }
+        if let dropObserver {
+            NotificationCenter.default.removeObserver(dropObserver)
+        }
     }
 
     /// Opens/closes the shelf independent of mouse hover — the global-hotkey
@@ -69,6 +116,7 @@ final class ShelfController {
     /// Collapses immediately (e.g. after a card tap copies an item, or Esc),
     /// bypassing the normal hover-based delay.
     func collapseImmediately() {
+        panel.canReceiveKeyFocus = false
         collapse()
         mouseTracker.forceCollapse()
     }
@@ -123,10 +171,11 @@ final class ShelfController {
     func expand() {
         guard !isExpanded else { return }
         let frontmost = NSWorkspace.shared.frontmostApplication
-        if let frontmost, frontmost.processIdentifier != NSRunningApplication.current.processIdentifier {
+        if let frontmost, frontmost.processIdentifier != NSRunningApplication.current.processIdentifier, frontmost.activationPolicy == .regular {
             previousApp = frontmost
         }
         isExpanded = true
+        panel.canReceiveKeyFocus = true
         panel.ignoresMouseEvents = false
         animationState.expand()
         // Once expanded, hovering anywhere over the shelf's footprint
@@ -141,13 +190,10 @@ final class ShelfController {
     private func collapse() {
         guard isExpanded else { return }
         isExpanded = false
+        panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.20) { [weak self] in
-            guard let self, !self.isExpanded else { return }
-            self.panel.resignKey()
-        }
     }
 }
 

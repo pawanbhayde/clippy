@@ -73,6 +73,15 @@ final class ClipboardStore: ObservableObject {
             indexNewItems(loaded)
             items = loaded
             loadError = nil
+            ImageCache.shared.prewarm(items: loaded) { [weak self] itemID, thumbPath in
+                Task { @MainActor in
+                    guard let self, let idx = self.items.firstIndex(where: { $0.id == itemID }) else { return }
+                    if self.items[idx].thumbnailPath != thumbPath {
+                        self.items[idx].thumbnailPath = thumbPath
+                        try? MetadataStore.save(self.items)
+                    }
+                }
+            }
         } catch {
             loadError = "\(error)"
         }

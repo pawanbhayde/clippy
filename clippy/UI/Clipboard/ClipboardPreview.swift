@@ -36,7 +36,7 @@ struct ClipboardPreview: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color.red)
+                    .background(Color(white: 0.22))
                     .clipShape(Capsule())
             }
 
@@ -49,7 +49,7 @@ struct ClipboardPreview: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
-                .background(Color.blue)
+                .background(Color(white: 0.22))
                 .clipShape(Capsule())
             }
 

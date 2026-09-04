@@ -27,12 +27,12 @@ final class GlobalMouseMonitor: MouseTrackingService {
 
     func start() {
         stop()
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseUp]) { [weak self] _ in
             // Global monitors' event coordinates are relative to whatever
             // app owns the event, not us — read the absolute location instead.
             self?.onMouseMoved?(NSEvent.mouseLocation)
         }
-        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged, .leftMouseUp]) { [weak self] event in
             self?.onMouseMoved?(NSEvent.mouseLocation)
             return event
         }
@@ -65,6 +65,8 @@ final class CGEventMouseMonitor: MouseTrackingService {
         stop()
 
         let eventMask = CGEventMask(1 << CGEventType.mouseMoved.rawValue)
+            | CGEventMask(1 << CGEventType.leftMouseDragged.rawValue)
+            | CGEventMask(1 << CGEventType.leftMouseUp.rawValue)
         let callback: CGEventTapCallBack = { _, _, event, refcon in
             guard let refcon else { return Unmanaged.passUnretained(event) }
             let monitor = Unmanaged<CGEventMouseMonitor>.fromOpaque(refcon).takeUnretainedValue()
@@ -189,6 +191,13 @@ final class MouseTracker {
         let isInsideShelf = shelfFrame?.contains(location) ?? false
 
         guard isInsideTrigger || isInsideShelf else {
+            // While a mouse button is pressed (e.g. user is actively dragging a card out of the shelf),
+            // do NOT collapse the shelf!
+            if NSEvent.pressedMouseButtons != 0 {
+                collapseTimer?.invalidate()
+                collapseTimer = nil
+                return
+            }
             scheduleCollapseIfNeeded()
             return
         }
@@ -202,9 +211,16 @@ final class MouseTracker {
     }
 
     private func scheduleCollapseIfNeeded() {
+        guard NSEvent.pressedMouseButtons == 0 else { return }
         guard isExpanded, collapseTimer == nil else { return }
         collapseTimer = Timer.scheduledTimer(withTimeInterval: Self.collapseDelay, repeats: false) { [weak self] _ in
-            self?.collapse()
+            guard let self else { return }
+            // Re-verify that the user has not started dragging or pressed down
+            guard NSEvent.pressedMouseButtons == 0 else {
+                self.collapseTimer = nil
+                return
+            }
+            self.collapse()
         }
     }
 

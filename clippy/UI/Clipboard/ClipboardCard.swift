@@ -13,6 +13,8 @@ struct ClipboardCard: View {
     /// via keyboard Enter — the caller is responsible for writing the item
     /// to the pasteboard (see `ClipboardStore.activate`).
     var onActivate: ((ClipboardItem) -> Void)?
+    /// Called when the user starts dragging this card — updates clipboard and history.
+    var onDragStarted: ((ClipboardItem) -> Void)?
     /// Called when the user toggles the favorite status of this card.
     var onToggleFavorite: ((ClipboardItem) -> Void)?
 
@@ -39,7 +41,8 @@ struct ClipboardCard: View {
             onActivate?(item)
         }
         .onDrag {
-            item.makeItemProvider()
+            onDragStarted?(item)
+            return item.makeItemProvider()
         }
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
@@ -58,7 +61,7 @@ struct ClipboardCard: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(5)
-                                .background(Color.blue, in: Circle())
+                                .background(Color(white: 0.22), in: Circle())
                         }
                         .menuStyle(.borderlessButton)
                         .frame(width: 22, height: 22)
@@ -70,7 +73,7 @@ struct ClipboardCard: View {
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(.white)
                                 .padding(5)
-                                .background(Color.green, in: Circle())
+                                .background(Color(white: 0.22), in: Circle())
                         }
                         .menuStyle(.borderlessButton)
                         .frame(width: 22, height: 22)
@@ -93,10 +96,10 @@ struct ClipboardCard: View {
                     } label: {
                         Image(systemName: isQueued ? "checkmark.circle.fill" : "plus.circle.fill")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(isQueued ? Color.orange : Color.white)
+                            .foregroundStyle(isQueued ? Color.white : Color(white: 0.8))
                             .padding(5)
                             .background(
-                                Circle().fill(Color.black.opacity(0.65))
+                                Circle().fill(isQueued ? Color.white.opacity(0.25) : Color.black.opacity(0.65))
                             )
                     }
                     .buttonStyle(.plain)
@@ -111,10 +114,10 @@ struct ClipboardCard: View {
                     } label: {
                         Image(systemName: item.isFavorite ? "star.fill" : "star")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(item.isFavorite ? Color.yellow : Color.white)
+                            .foregroundStyle(Color.white)
                             .padding(5)
                             .background(
-                                Circle().fill(Color.black.opacity(0.65))
+                                Circle().fill(item.isFavorite ? Color.white.opacity(0.25) : Color.black.opacity(0.65))
                             )
                     }
                     .buttonStyle(.plain)
@@ -265,15 +268,7 @@ struct ClipboardCard: View {
 
     @ViewBuilder
     private var imagePreview: some View {
-        if let path = item.thumbnailPath ?? item.storagePath, let nsImage = NSImage(contentsOfFile: path) {
-            Image(nsImage: nsImage)
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(width: Self.size.width, height: Self.size.height)
-                .clipped()
-        } else {
-            placeholder(systemImage: "photo")
-        }
+        CachedThumbnailView(item: item, targetSize: Self.size)
     }
 
     private var colorPreview: some View {
@@ -389,7 +384,7 @@ struct ClipboardCard: View {
 
     @ViewBuilder
     private var sourceIcon: some View {
-        if let path = item.sourceApp?.cachedIconPath, let nsImage = NSImage(contentsOfFile: path) {
+        if let path = item.sourceApp?.cachedIconPath, let nsImage = ImageCache.shared.icon(at: path) {
             Image(nsImage: nsImage)
                 .resizable()
                 .frame(width: 18, height: 18)
@@ -620,11 +615,68 @@ extension Color {
     }
 }
 
+// MARK: - Cached Thumbnail View
+
+private struct CachedThumbnailView: View {
+    let item: ClipboardItem
+    let targetSize: CGSize
+
+    @State private var image: NSImage?
+
+    var body: some View {
+        Group {
+            if let image = image ?? ImageCache.shared.image(for: item.id.uuidString) {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: targetSize.width, height: targetSize.height)
+                    .clipped()
+            } else {
+                ZStack {
+                    Color.black
+                    Image(systemName: "photo")
+                        .font(.system(size: 26))
+                        .foregroundStyle(Color(white: 0.28))
+                }
+                .frame(width: targetSize.width, height: targetSize.height)
+            }
+        }
+        .onAppear {
+            loadImage()
+        }
+        .onChange(of: item.id) { _, _ in
+            loadImage()
+        }
+    }
+
+    private func loadImage() {
+        if let cached = ImageCache.shared.image(for: item.id.uuidString) {
+            self.image = cached
+            return
+        }
+        Task.detached(priority: .userInitiated) {
+            let loaded = await ImageCache.shared.loadThumbnail(for: item, maxDimension: max(targetSize.width, targetSize.height) * 2)
+            if let loaded {
+                await MainActor.run {
+                    withAnimation(.easeIn(duration: 0.12)) {
+                        self.image = loaded
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Drag & Drop Item Provider Support
+
+extension Notification.Name {
+    static let shelfShouldCollapseAfterDrop = Notification.Name("clippy.shelfShouldCollapseAfterDrop")
+}
 
 extension ClipboardItem {
     /// Constructs an `NSItemProvider` representing this clipboard item for
-    /// drag-and-drop operations into external apps (WhatsApp, Telegram, Finder, Slack, Discord, etc.).
+    /// drag-and-drop operations into external apps (browser text inputs, textareas,
+    /// WhatsApp, Telegram, Finder, Slack, Discord, code editors, etc.).
     func makeItemProvider() -> NSItemProvider {
         switch type {
         case .image:
@@ -641,6 +693,7 @@ extension ClipboardItem {
                 let provider = NSItemProvider()
                 provider.registerDataRepresentation(forTypeIdentifier: UTType.png.identifier, visibility: .all) { completion in
                     completion(data, nil)
+                    Self.scheduleDropCollapse()
                     return nil
                 }
                 return provider
@@ -660,30 +713,65 @@ extension ClipboardItem {
 
         case .url:
             let text = AssetStore.readText(for: self) ?? preview ?? ""
+            let provider = NSItemProvider()
+            // Provide plain text representations so input/textarea fields fill with the URL string
+            registerPlainText(text, on: provider)
+            // Also provide NSURL so dropping onto browser tab bar, bookmarks, or Finder creates a link
             if let url = URL(string: text) {
-                return NSItemProvider(object: url as NSURL)
+                provider.registerObject(url as NSURL, visibility: .all)
             }
-            return NSItemProvider(object: text as NSString)
+            return provider
 
         case .text, .code:
-            let text = (isEncrypted ? preview : AssetStore.readText(for: self)) ?? preview ?? ""
-            return NSItemProvider(object: text as NSString)
+            let text = AssetStore.readText(for: self) ?? preview ?? ""
+            let provider = NSItemProvider()
+            registerPlainText(text, on: provider)
+            return provider
 
         case .color:
             let hex = preview ?? ""
-            return NSItemProvider(object: hex as NSString)
+            let provider = NSItemProvider()
+            registerPlainText(hex, on: provider)
+            return provider
 
         case .richText:
             let provider = NSItemProvider()
             if let rtfData = AssetStore.readRichText(for: self) {
                 provider.registerDataRepresentation(forTypeIdentifier: UTType.rtf.identifier, visibility: .all) { completion in
                     completion(rtfData, nil)
+                    Self.scheduleDropCollapse()
                     return nil
                 }
             }
-            let plain = (isEncrypted ? preview : AssetStore.readText(for: self)) ?? preview ?? ""
-            provider.registerObject(plain as NSString, visibility: .all)
+            let plain = AssetStore.readText(for: self) ?? preview ?? ""
+            registerPlainText(plain, on: provider)
             return provider
+        }
+    }
+
+    private func registerPlainText(_ text: String, on provider: NSItemProvider) {
+        provider.registerObject(text as NSString, visibility: .all)
+        guard let data = text.data(using: .utf8) else { return }
+
+        let types = [
+            UTType.utf8PlainText.identifier,
+            UTType.plainText.identifier,
+            UTType.text.identifier,
+            "NSStringPboardType"
+        ]
+
+        for typeIdentifier in types {
+            provider.registerDataRepresentation(forTypeIdentifier: typeIdentifier, visibility: .all) { completion in
+                completion(data, nil)
+                Self.scheduleDropCollapse()
+                return nil
+            }
+        }
+    }
+
+    private static func scheduleDropCollapse() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            NotificationCenter.default.post(name: .shelfShouldCollapseAfterDrop, object: nil)
         }
     }
 }

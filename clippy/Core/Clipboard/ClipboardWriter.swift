@@ -142,13 +142,14 @@ enum ClipboardWriter {
     /// it and simulating a `⌘V` keystroke.
     /// - Parameters:
     ///   - targetApp: The application to receive the paste (defaults to frontmost app if not self).
-    ///   - delay: Time interval in seconds to wait for target app window focus to settle (default 0.15s).
-    static func pasteToFrontmostApp(targetApp: NSRunningApplication? = nil, delay: TimeInterval = 0.15) {
+    ///   - delay: Time interval in seconds to wait for target app window focus to settle (default 0.18s).
+    static func pasteToFrontmostApp(targetApp: NSRunningApplication? = nil, delay: TimeInterval = 0.18) {
         let now = Date().timeIntervalSince1970
-        guard now - lastPasteTimestamp > 0.4 else { return }
+        guard now - lastPasteTimestamp > 0.35 else { return }
         lastPasteTimestamp = now
 
         if !PermissionsManager.isAccessibilityGranted() {
+            print("ClipboardWriter: Accessibility permission not granted for direct paste")
             PermissionsManager.requestAccessibilityPermission()
             return
         }
@@ -167,8 +168,14 @@ enum ClipboardWriter {
         }()
 
         if let appToActivate {
+            print("ClipboardWriter: Activating target application for direct paste: \(appToActivate.localizedName ?? "\(appToActivate.processIdentifier)")")
+            if #available(macOS 14.0, *) {
+                NSApp.yieldActivation(to: appToActivate)
+                appToActivate.activate()
+            }
             appToActivate.activate(options: .activateIgnoringOtherApps)
         }
+        NSApp.deactivate()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             simulatePasteKeystroke()
