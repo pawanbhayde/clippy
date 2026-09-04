@@ -5,8 +5,11 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    static var shared: AppDelegate? {
-        NSApp.delegate as? AppDelegate
+    private(set) static var shared: AppDelegate?
+
+    override init() {
+        super.init()
+        AppDelegate.shared = self
     }
 
     private var statusItem: NSStatusItem?
@@ -76,6 +79,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         favoritesItem.target = self
         menu.addItem(favoritesItem)
 
+        // 5. Clear All History
+        let clearHistoryItem = NSMenuItem(title: "Clear All History...", action: #selector(clearAllHistory), keyEquivalent: "")
+        clearHistoryItem.target = self
+        menu.addItem(clearHistoryItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // 5. Pause / Resume Clipboard
@@ -134,6 +142,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openFavorites() {
         shelfController?.openFavorites()
+    }
+
+    @objc func clearAllHistory() {
+        shelfController?.confirmAndClearHistory()
     }
 
     @objc private func togglePauseClipboard() {

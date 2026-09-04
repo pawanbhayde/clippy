@@ -182,4 +182,22 @@ enum AssetStore {
             }
         }
     }
+
+    /// Removes all stored assets across all directories (items, images, files, thumbnails).
+    static func deleteAllAssets() {
+        let fileManager = FileManager.default
+        let directories = [
+            LocalStorage.itemsDirectoryURL,
+            LocalStorage.imagesDirectoryURL,
+            LocalStorage.filesDirectoryURL,
+            LocalStorage.thumbnailsDirectoryURL
+        ]
+        for directory in directories {
+            if let contents = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) {
+                for url in contents {
+                    try? fileManager.removeItem(at: url)
+                }
+            }
+        }
+    }
 }

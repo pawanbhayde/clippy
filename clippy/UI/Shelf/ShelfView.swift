@@ -39,6 +39,9 @@ struct ShelfView: View {
                                         store.selectedCollectionID = Collection.favorites.id
                                     }
                                 },
+                                onClearAll: {
+                                    store.clearAllHistory(preserveFavorites: false)
+                                },
                                 onOpenSettings: {
                                     onCollapseRequested()
                                     AppDelegate.shared?.openSettings()

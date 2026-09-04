@@ -139,4 +139,31 @@ final class ClipboardStore: ObservableObject {
             loadError = "\(error)"
         }
     }
+
+    /// Clears clipboard history from memory and on-disk storage.
+    /// - Parameter preserveFavorites: If `true`, favorited items are kept; if `false`, everything is deleted.
+    func clearAllHistory(preserveFavorites: Bool = false) {
+        do {
+            if preserveFavorites {
+                let favorites = items.filter { $0.isFavorite }
+                let toRemove = items.filter { !$0.isFavorite }
+                for item in toRemove {
+                    AssetStore.deleteAssets(for: item.id)
+                }
+                try MetadataStore.save(favorites)
+                items = favorites
+            } else {
+                for item in items {
+                    AssetStore.deleteAssets(for: item.id)
+                }
+                AssetStore.deleteAllAssets()
+                try MetadataStore.save([])
+                items = []
+            }
+            searchQuery = ""
+            reload()
+        } catch {
+            loadError = "\(error)"
+        }
+    }
 }

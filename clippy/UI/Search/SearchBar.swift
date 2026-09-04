@@ -6,6 +6,7 @@ struct SearchBar: View {
     @Binding var text: String
     var isFavoritesActive: Bool = false
     var onToggleFavorites: (() -> Void)? = nil
+    var onClearAll: (() -> Void)? = nil
     var onOpenSettings: (() -> Void)? = nil
     var onPinOrPopout: (() -> Void)? = nil
 
@@ -57,7 +58,22 @@ struct SearchBar: View {
                 .buttonStyle(.plain)
                 .help("Filter Favorites")
 
-                // 2. Settings button
+                // 2. Clear All History
+                Button {
+                    onClearAll?()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color(white: 0.75))
+                        .frame(width: 30, height: 30)
+                        .background(
+                            Circle().fill(Color(white: 0.16))
+                        )
+                }
+                .buttonStyle(.plain)
+                .help("Clear All Clipboard History")
+
+                // 3. Settings button
                 Button {
                     onOpenSettings?()
                 } label: {

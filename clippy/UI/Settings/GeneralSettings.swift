@@ -9,9 +9,10 @@ struct GeneralSettingsView: View {
     @AppStorage("isDirectPasteEnabled") private var isDirectPasteEnabled = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("General Settings")
-                .font(.headline)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text("General Settings")
+                    .font(.headline)
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Startup")
@@ -79,8 +80,31 @@ struct GeneralSettingsView: View {
                     .padding(.leading, 20)
             }
 
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Clipboard History")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Text("Manage your saved clipboard history, cached images, and file previews.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                HStack {
+                    Button(role: .destructive) {
+                        AppDelegate.shared?.clearAllHistory()
+                    } label: {
+                        Label("Clear All Clipboard History...", systemImage: "trash")
+                    }
+
+                    Spacer()
+                }
+            }
+
             Spacer()
         }
         .padding(20)
+        }
     }
 }

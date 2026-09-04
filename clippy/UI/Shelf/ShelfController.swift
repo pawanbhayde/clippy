@@ -95,6 +95,31 @@ final class ShelfController {
         expand()
     }
 
+    /// Clears all clipboard history.
+    func clearAllHistory(preserveFavorites: Bool = false) {
+        clipboardStore.clearAllHistory(preserveFavorites: preserveFavorites)
+    }
+
+    /// Prompts the user with a confirmation alert before clearing history.
+    func confirmAndClearHistory() {
+        let alert = NSAlert()
+        alert.messageText = "Clear Clipboard History"
+        alert.informativeText = "Are you sure you want to clear your clipboard history? This will delete copied items and cached files."
+        alert.alertStyle = .warning
+        let clearAllBtn = alert.addButton(withTitle: "Clear All")
+        clearAllBtn.hasDestructiveAction = true
+        alert.addButton(withTitle: "Keep Favorites")
+        alert.addButton(withTitle: "Cancel")
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            clearAllHistory(preserveFavorites: false)
+        } else if response == .alertSecondButtonReturn {
+            clearAllHistory(preserveFavorites: true)
+        }
+    }
+
     func expand() {
         guard !isExpanded else { return }
         let frontmost = NSWorkspace.shared.frontmostApplication
