@@ -21,12 +21,15 @@ final class ShelfController {
         self.globalShortcut = globalShortcut ?? GlobalShortcut()
 
         panel = ShelfWindow(contentRect: NSRect(origin: .zero, size: ShelfAnimation.expandedSize))
-        panel.contentView = NSHostingView(rootView: ShelfView(
+        panel.ignoresMouseEvents = true
+        let hostingView = NonFocusRingHostingView(rootView: ShelfView(
             state: animationState,
             store: clipboardStore,
             onCopied: { [weak self] in self?.collapseImmediately() },
             onCollapseRequested: { [weak self] in self?.collapseImmediately() }
         ))
+        hostingView.focusRingType = .none
+        panel.contentView = hostingView
 
         self.mouseTracker.onExpand = { [weak self] in self?.expand() }
         self.mouseTracker.onCollapse = { [weak self] in self?.collapse() }
@@ -86,6 +89,7 @@ final class ShelfController {
     func expand() {
         guard !isExpanded else { return }
         isExpanded = true
+        panel.ignoresMouseEvents = false
         animationState.expand()
         // Once expanded, hovering anywhere over the shelf's footprint
         // counts as "still in use" — not just the narrow trigger strip.
@@ -99,8 +103,25 @@ final class ShelfController {
     private func collapse() {
         guard isExpanded else { return }
         isExpanded = false
+        panel.ignoresMouseEvents = true
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
         panel.resignKey()
     }
 }
+
+// MARK: - Hosting View without Focus Ring
+
+/// An `NSHostingView` subclass that completely suppresses the AppKit focus ring
+/// to prevent macOS from drawing a light blue accent border around the panel.
+private final class NonFocusRingHostingView<Content: View>: NSHostingView<Content> {
+    override var focusRingType: NSFocusRingType {
+        get { .none }
+        set { }
+    }
+
+    override func drawFocusRingMask() {
+        // Suppress drawing any focus ring mask
+    }
+}
+

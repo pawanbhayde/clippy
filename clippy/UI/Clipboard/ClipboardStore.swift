@@ -128,4 +128,15 @@ final class ClipboardStore: ObservableObject {
             loadError = "\(error)"
         }
     }
+
+    /// Toggles the favorite status of `item` and saves the updated list to disk.
+    func toggleFavorite(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].isFavorite.toggle()
+        do {
+            try MetadataStore.save(items)
+        } catch {
+            loadError = "\(error)"
+        }
+    }
 }

@@ -22,14 +22,15 @@ enum ScreenManager {
     }
 
     /// The top-left origin for a panel of `panelSize`, horizontally
-    /// centered and docked flush to the top edge of `screen` (matching
-    /// the Dynamic Island / notch silhouette) — defaulting to `activeScreen()`.
+    /// centered and docked just below the menu bar / notch of `screen`
+    /// (matching the Dynamic Island / notch silhouette) — defaulting to `activeScreen()`.
     static func topCenterPosition(for screen: NSScreen? = nil, panelSize: NSSize) -> NSPoint {
         guard let screen = screen ?? activeScreen() else { return .zero }
 
         let frame = screen.frame
         let originX = frame.midX - panelSize.width / 2
-        let originY = frame.maxY - panelSize.height
+        let inset = topInset(for: screen)
+        let originY = frame.maxY - inset - panelSize.height
         return NSPoint(x: originX, y: originY)
     }
 }

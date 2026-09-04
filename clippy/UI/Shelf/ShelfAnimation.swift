@@ -10,7 +10,7 @@ enum ShelfAnimation {
     /// Size of the collapsed, capsule-shaped trigger indicator.
     static let collapsedSize = CGSize(width: 140, height: 8)
     /// Size of the fully expanded shelf matching the widescreen custom notch dock.
-    static let expandedSize = CGSize(width: 860, height: 320)
+    static let expandedSize = CGSize(width: 880, height: 320)
 
     /// How long each stage is given before the next one starts, so
     /// width → height → content-fade read as sequential beats rather than

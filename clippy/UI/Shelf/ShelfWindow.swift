@@ -27,7 +27,7 @@ final class ShelfWindow: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = true
+        hasShadow = false
     }
 
     /// Borderless windows default to `canBecomeKey == false`. Overridden so

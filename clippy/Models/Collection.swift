@@ -66,7 +66,7 @@ extension Collection {
     )
     static let assets = Collection(
         id: UUID(uuidString: "8A1D9C1E-0000-4000-8000-000000000013")!,
-        name: "Assets", icon: "photo.on.rectangle", filter: .types([.image, .file])
+        name: "Images", icon: "photo.on.rectangle", filter: .types([.image, .file])
     )
     static let inspirations = Collection(
         id: UUID(uuidString: "8A1D9C1E-0000-4000-8000-000000000017")!,

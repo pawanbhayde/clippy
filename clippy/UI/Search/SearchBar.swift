@@ -25,6 +25,7 @@ struct SearchBar: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 14, weight: .regular))
                 .foregroundColor(.white)
+                .focusEffectDisabled()
 
                 if !text.isEmpty {
                     Button {

@@ -6,11 +6,11 @@ import SwiftUI
 /// concave fillets, vertical side walls, and smooth rounded bottom corners.
 struct NotchShelfShape: Shape {
     /// Width of the top outward ear flares.
-    var flareWidth: CGFloat = 36
+    var flareWidth: CGFloat = 14
     /// Height of the flare transition from top edge down to the vertical walls.
-    var flareHeight: CGFloat = 20
+    var flareHeight: CGFloat = 10
     /// Radius of the bottom corners.
-    var bottomRadius: CGFloat = 26
+    var bottomRadius: CGFloat = 24
 
     func path(in rect: CGRect) -> Path {
         var path = Path()

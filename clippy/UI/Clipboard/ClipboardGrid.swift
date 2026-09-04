@@ -2,8 +2,8 @@ import SwiftUI
 
 // MARK: - SwiftUI view laying out clipboard cards in a grid
 
-/// Horizontally scrolling, two-row grid of `ClipboardCard`s sized to fit
-/// inside the shelf. Reads live from an `ClipboardStore`.
+/// Horizontally scrolling single-row list of `ClipboardCard`s matching the custom dock layout.
+/// Reads live from a `ClipboardStore`.
 struct ClipboardGrid: View {
     @ObservedObject var store: ClipboardStore
     /// The currently keyboard-selected item, if any — highlighted via
@@ -13,11 +13,6 @@ struct ClipboardGrid: View {
     /// this grid has already recorded the usage on `store`.
     var onCopied: ((ClipboardItem) -> Void)?
 
-    private let rows = [
-        GridItem(.fixed(ClipboardCard.size.height), spacing: 12),
-        GridItem(.fixed(ClipboardCard.size.height), spacing: 12)
-    ]
-
     var body: some View {
         Group {
             if store.visibleItems.isEmpty {
@@ -25,20 +20,30 @@ struct ClipboardGrid: View {
             } else {
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHGrid(rows: rows, spacing: 12) {
+                        LazyHStack(spacing: 14) {
                             ForEach(store.visibleItems) { item in
-                                ClipboardCard(item: item, isSelected: item.id == selectedID) { activatedItem in
-                                    store.activate(activatedItem)
-                                    onCopied?(activatedItem)
-                                }
+                                ClipboardCard(
+                                    item: item,
+                                    isSelected: item.id == selectedID,
+                                    onActivate: { activatedItem in
+                                        store.activate(activatedItem)
+                                        onCopied?(activatedItem)
+                                    },
+                                    onToggleFavorite: { favoritedItem in
+                                        store.toggleFavorite(favoritedItem)
+                                    }
+                                )
                                 .id(item.id)
                             }
                         }
-                        .padding(12)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 4)
                     }
                     .onChange(of: selectedID) { _, newValue in
                         guard let newValue else { return }
-                        withAnimation { proxy.scrollTo(newValue, anchor: .center) }
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            proxy.scrollTo(newValue, anchor: .center)
+                        }
                     }
                 }
             }
@@ -46,13 +51,13 @@ struct ClipboardGrid: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             Image(systemName: store.items.isEmpty ? "clipboard" : "magnifyingglass")
-                .font(.system(size: 28))
-                .foregroundStyle(.secondary)
-            Text(store.items.isEmpty ? "Nothing copied yet" : "No matches for \"\(store.searchQuery)\"")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(.system(size: 32, weight: .light))
+                .foregroundStyle(Color(white: 0.4))
+            Text(store.items.isEmpty ? "Clipboard is empty" : "No matches for \"\(store.searchQuery)\"")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Color(white: 0.45))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

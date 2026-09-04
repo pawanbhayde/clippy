@@ -14,10 +14,25 @@ struct CollectionTabBar: View {
     @State private var isShowingAddSheet: Bool = false
     @State private var newCollectionName: String = ""
 
+    private var visibleCollections: [Collection] {
+        collections.filter { collection in
+            // Always show History
+            if collection.id == Collection.history.id {
+                return true
+            }
+            // If this collection is currently selected by the user, keep it visible
+            if selection == collection.id {
+                return true
+            }
+            // Only show category chip if there are items in the clipboard for it
+            return store.count(for: collection) > 0
+        }
+    }
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(collections) { collection in
+                ForEach(visibleCollections) { collection in
                     let isSelected = selection == collection.id
                     let count = store.count(for: collection)
 

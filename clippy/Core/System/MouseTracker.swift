@@ -109,7 +109,7 @@ final class CGEventMouseMonitor: MouseTrackingService {
 /// directly under the notch/menu bar, and hovering the shelf itself once
 /// it's open. Expands on either; collapses ~300ms after leaving both.
 final class MouseTracker {
-    private static let defaultTriggerSize = NSSize(width: 220, height: 6)
+    private static let defaultTriggerSize = NSSize(width: 320, height: 48)
     private static let collapseDelay: TimeInterval = 0.3
 
     /// Called when the mouse enters the trigger region (or the shelf,
@@ -166,13 +166,17 @@ final class MouseTracker {
 
     private static func triggerRegion(size: NSSize) -> NSRect {
         guard let screen = ScreenManager.activeScreen() else { return .zero }
+        let inset = ScreenManager.topInset(for: screen)
+        // Transparent hover zone covering the camera / notch and immediate surround
+        let totalHeight = max(inset + 18, size.height)
         let originX = screen.frame.midX - size.width / 2
-        let originY = screen.frame.maxY - size.height
-        return NSRect(origin: NSPoint(x: originX, y: originY), size: size)
+        let originY = screen.frame.maxY - totalHeight
+        return NSRect(origin: NSPoint(x: originX, y: originY), size: NSSize(width: size.width, height: totalHeight))
     }
 
     private func handleMouseMoved(_ location: NSPoint) {
-        let isInsideTrigger = triggerRegion.contains(location)
+        let currentTrigger = Self.triggerRegion(size: triggerSize)
+        let isInsideTrigger = currentTrigger.contains(location)
         let isInsideShelf = shelfFrame?.contains(location) ?? false
 
         guard isInsideTrigger || isInsideShelf else {
