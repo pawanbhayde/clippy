@@ -22,22 +22,31 @@ protocol MouseTrackingService: AnyObject {
 final class GlobalMouseMonitor: MouseTrackingService {
     var onMouseMoved: ((NSPoint) -> Void)?
 
-    private var monitor: Any?
+    private var globalMonitor: Any?
+    private var localMonitor: Any?
 
     func start() {
         stop()
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
             // Global monitors' event coordinates are relative to whatever
             // app owns the event, not us — read the absolute location instead.
             self?.onMouseMoved?(NSEvent.mouseLocation)
         }
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
+            self?.onMouseMoved?(NSEvent.mouseLocation)
+            return event
+        }
     }
 
     func stop() {
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
+        if let globalMonitor {
+            NSEvent.removeMonitor(globalMonitor)
         }
-        monitor = nil
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
+        }
+        globalMonitor = nil
+        localMonitor = nil
     }
 
     deinit { stop() }
@@ -110,7 +119,7 @@ final class CGEventMouseMonitor: MouseTrackingService {
 /// it's open. Expands on either; collapses ~300ms after leaving both.
 final class MouseTracker {
     private static let defaultTriggerSize = NSSize(width: 320, height: 48)
-    private static let collapseDelay: TimeInterval = 0.3
+    private static let collapseDelay: TimeInterval = 0.12
 
     /// Called when the mouse enters the trigger region (or the shelf,
     /// while already expanded) and the shelf should expand.

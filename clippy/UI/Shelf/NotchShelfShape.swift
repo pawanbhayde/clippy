@@ -14,15 +14,18 @@ struct NotchShelfShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
+        guard rect.width > 0, rect.height > 0 else {
+            return path
+        }
         let w = rect.width
         let h = rect.height
-        let fw = flareWidth
-        let fh = flareHeight
-        let r = min(bottomRadius, max(0, (h - fh) / 2))
+        let fw = min(flareWidth, w * 0.12)
+        let fh = min(flareHeight, h * 0.25)
+        let r = min(bottomRadius, max(0, min((w - fw * 2) / 2, (h - fh) / 2)))
 
         // Fallback for very small or collapsed sizes (capsule indicator)
         guard w > fw * 2 + r * 2, h > fh + r else {
-            return RoundedRectangle(cornerRadius: min(12, h / 2)).path(in: rect)
+            return RoundedRectangle(cornerRadius: min(14, max(0, h / 2))).path(in: rect)
         }
 
         // Start at top-left origin (0, 0)

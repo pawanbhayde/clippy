@@ -77,6 +77,32 @@ struct ClipboardCard: View {
                     }
                 }
 
+                // Queue Button (add/remove from sequential paste queue)
+                if isHovered || PasteQueueManager.shared.isActive {
+                    let isQueued = PasteQueueManager.shared.queue.contains(where: { $0.id == item.id })
+                    Button {
+                        if isQueued {
+                            if let idx = PasteQueueManager.shared.queue.firstIndex(where: { $0.id == item.id }) {
+                                PasteQueueManager.shared.remove(at: idx)
+                                showCopiedToast("Removed from Queue")
+                            }
+                        } else {
+                            PasteQueueManager.shared.enqueue(item)
+                            showCopiedToast("Added to Queue")
+                        }
+                    } label: {
+                        Image(systemName: isQueued ? "checkmark.circle.fill" : "plus.circle.fill")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(isQueued ? Color.orange : Color.white)
+                            .padding(5)
+                            .background(
+                                Circle().fill(Color.black.opacity(0.65))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .help(isQueued ? "Remove from Queue" : "Add to Sequential Paste Queue")
+                }
+
                 // Favorite Star Button (interactive tap to mark/unmark as favorite)
                 if item.isFavorite || isHovered {
                     Button {

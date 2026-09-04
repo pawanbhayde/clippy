@@ -17,8 +17,8 @@ final class ShelfController {
     private let clipboardStore = ClipboardStore()
     private var previousApp: NSRunningApplication?
 
-    init(mouseTracker: MouseTracker = MouseTracker(), globalShortcut: GlobalShortcut? = nil) {
-        self.mouseTracker = mouseTracker
+    init(mouseTracker: MouseTracker? = nil, globalShortcut: GlobalShortcut? = nil) {
+        self.mouseTracker = mouseTracker ?? MouseTracker()
         self.globalShortcut = globalShortcut ?? GlobalShortcut()
 
         panel = ShelfWindow(contentRect: NSRect(origin: .zero, size: ShelfAnimation.expandedSize))
@@ -144,7 +144,10 @@ final class ShelfController {
         panel.ignoresMouseEvents = true
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
-        panel.resignKey()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.20) { [weak self] in
+            guard let self, !self.isExpanded else { return }
+            self.panel.resignKey()
+        }
     }
 }
 

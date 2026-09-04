@@ -5,7 +5,10 @@ import SwiftUI
 struct SearchBar: View {
     @Binding var text: String
     var isFavoritesActive: Bool = false
+    var isQueueActive: Bool = false
+    var queueCount: Int = 0
     var onToggleFavorites: (() -> Void)? = nil
+    var onToggleQueue: (() -> Void)? = nil
     var onClearAll: (() -> Void)? = nil
     var onOpenSettings: (() -> Void)? = nil
     var onPinOrPopout: (() -> Void)? = nil
@@ -39,7 +42,7 @@ struct SearchBar: View {
                     .buttonStyle(.plain)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minWidth: 60, maxWidth: .infinity, alignment: .leading)
 
             // Right utility buttons
             HStack(spacing: 8) {
@@ -57,6 +60,32 @@ struct SearchBar: View {
                 }
                 .buttonStyle(.plain)
                 .help("Filter Favorites")
+
+                // 2. Queue Mode toggle
+                Button {
+                    onToggleQueue?()
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "list.number")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(isQueueActive ? Color.orange : Color(white: 0.75))
+                            .frame(width: 30, height: 30)
+                            .background(
+                                Circle().fill(isQueueActive ? Color.orange.opacity(0.25) : Color(white: 0.16))
+                            )
+
+                        if queueCount > 0 {
+                            Text("\(queueCount)")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 14, height: 14)
+                                .background(Circle().fill(Color.orange))
+                                .offset(x: 4, y: -4)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .help(isQueueActive ? "Queue Mode Active (\(queueCount) items) - Click to Stop" : "Start Sequential Queue Paste (⌘⌥V)")
 
                 // 2. Clear All History
                 Button {

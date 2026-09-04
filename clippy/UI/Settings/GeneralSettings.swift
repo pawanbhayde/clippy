@@ -46,6 +46,16 @@ struct GeneralSettingsView: View {
                 Text("Default is ⌘⇧V. Press this shortcut from any application to quickly toggle the clipboard shelf.")
                     .font(.caption)
                     .foregroundColor(.secondary)
+
+                HStack {
+                    Text("Toggle Queue Mode:")
+                    Spacer()
+                    KeyboardShortcuts.Recorder(for: .toggleQueueMode)
+                }
+
+                Text("Default is ⌘⌥V. When enabled, multiple copies are queued up and pasted sequentially one-by-one with each ⌘V.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
 
             Divider()

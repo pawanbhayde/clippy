@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var shelfController: ShelfController?
     private var settingsWindow: NSWindow?
     private var pauseMenuItem: NSMenuItem?
+    private var queueMenuItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Run as a pure menu-bar / accessory app (no Dock icon, no default window)
@@ -79,14 +80,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         favoritesItem.target = self
         menu.addItem(favoritesItem)
 
-        // 5. Clear All History
+        // 5. Queue Mode
+        let queueItem = NSMenuItem(title: "Start Queue Mode (⌘⌥V)", action: #selector(toggleQueueMode), keyEquivalent: "")
+        queueItem.target = self
+        self.queueMenuItem = queueItem
+        menu.addItem(queueItem)
+
+        // 6. Clear All History
         let clearHistoryItem = NSMenuItem(title: "Clear All History...", action: #selector(clearAllHistory), keyEquivalent: "")
         clearHistoryItem.target = self
         menu.addItem(clearHistoryItem)
 
         menu.addItem(NSMenuItem.separator())
 
-        // 5. Pause / Resume Clipboard
+        // 7. Pause / Resume Clipboard
         let pauseItem = NSMenuItem(title: "Pause Clipboard", action: #selector(togglePauseClipboard), keyEquivalent: "")
         pauseItem.target = self
         self.pauseMenuItem = pauseItem
@@ -94,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // 6. Settings
+        // 8. Settings
         let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
@@ -105,7 +112,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        // 7. Quit
+        // 9. Quit
         let quitItem = NSMenuItem(title: "Quit Clippy", action: #selector(quitApp), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
@@ -118,12 +125,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         updatePauseMenuItem()
+        updateQueueMenuItem()
     }
 
     private func updatePauseMenuItem() {
         let isPaused = ClipboardService.shared.isPaused
         pauseMenuItem?.title = isPaused ? "Resume Clipboard" : "Pause Clipboard"
         pauseMenuItem?.state = isPaused ? .on : .off
+    }
+
+    private func updateQueueMenuItem() {
+        let isQueueActive = PasteQueueManager.shared.isActive
+        let count = PasteQueueManager.shared.queue.count
+        if isQueueActive {
+            queueMenuItem?.title = count > 0 ? "Stop Queue Mode (\(count) left)" : "Stop Queue Mode"
+            queueMenuItem?.state = .on
+        } else {
+            queueMenuItem?.title = "Start Queue Mode (⌘⌥V)"
+            queueMenuItem?.state = .off
+        }
     }
 
     // MARK: - Actions
@@ -142,6 +162,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openFavorites() {
         shelfController?.openFavorites()
+    }
+
+    @objc private func toggleQueueMode() {
+        PasteQueueManager.shared.toggle()
+        updateQueueMenuItem()
     }
 
     @objc func clearAllHistory() {

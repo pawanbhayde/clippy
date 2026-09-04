@@ -11,6 +11,7 @@ struct ShelfView: View {
     var onCopied: () -> Void
     var onCollapseRequested: () -> Void
 
+    @ObservedObject private var queueManager = PasteQueueManager.shared
     @State private var selectedID: ClipboardItem.ID?
     @FocusState private var isFocused: Bool
 
@@ -18,59 +19,76 @@ struct ShelfView: View {
         ZStack(alignment: .top) {
             Color.clear
 
-            if state.phase == .collapsed {
-                Color.clear
-                    .frame(width: state.phase.size.width, height: state.phase.size.height)
-            } else {
-                NotchShelfShape()
-                    .fill(Color.black)
-                    .frame(width: state.phase.size.width, height: state.phase.size.height)
-                    .shadow(color: Color.black.opacity(0.4), radius: 14, x: 0, y: 6)
-                    .overlay(alignment: .top) {
-                        VStack(spacing: 12) {
-                            // Row 1: Search bar & utility action icons
-                            SearchBar(
-                                text: $store.searchQuery,
-                                isFavoritesActive: store.selectedCollectionID == Collection.favorites.id,
-                                onToggleFavorites: {
-                                    if store.selectedCollectionID == Collection.favorites.id {
-                                        store.selectedCollectionID = Collection.history.id
-                                    } else {
-                                        store.selectedCollectionID = Collection.favorites.id
-                                    }
-                                },
-                                onClearAll: {
-                                    store.clearAllHistory(preserveFavorites: false)
-                                },
-                                onOpenSettings: {
-                                    onCollapseRequested()
-                                    AppDelegate.shared?.openSettings()
-                                },
-                                onPinOrPopout: {
-                                    // Collapse or toggle action
-                                    onCollapseRequested()
-                                }
-                            )
+            // Dynamic Island / Notch container
+            NotchShelfShape()
+                .fill(Color.black)
+                .frame(width: state.currentSize.width, height: state.currentSize.height)
+                .shadow(color: Color.black.opacity(state.isExpanded ? 0.45 : 0), radius: 16, x: 0, y: 6)
+                .opacity(state.isExpanded ? 1 : (queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) ? 1 : 0))
 
-                            // Row 2: Category chips with counts + Add button
-                            CollectionTabBar(
-                                collections: store.collections,
-                                selection: $store.selectedCollectionID,
-                                store: store
-                            )
-
-                            // Row 3: Horizontally scrollable clipboard cards
-                            ClipboardGrid(store: store, selectedID: selectedID) { _ in
-                                onCopied()
-                            }
-                        }
-                        .padding(.top, 14)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 16)
-                        .opacity(state.phase.contentOpacity)
-                        .allowsHitTesting(state.phase == .expanded)
-                    }
+            // Collapsed Pill Indicator (if Queue is active)
+            if !state.isExpanded && queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
+                QueueCollapsedPill(queueManager: queueManager)
+                    .padding(.top, 4)
+                    .transition(.opacity)
             }
+
+            // Expanded content: permanently mounted for zero layout thrashing, smoothly animated
+            VStack(spacing: 12) {
+                // Row 1: Search bar & utility action icons
+                SearchBar(
+                    text: $store.searchQuery,
+                    isFavoritesActive: store.selectedCollectionID == Collection.favorites.id,
+                    isQueueActive: queueManager.isActive,
+                    queueCount: queueManager.queue.count,
+                    onToggleFavorites: {
+                        if store.selectedCollectionID == Collection.favorites.id {
+                            store.selectedCollectionID = Collection.history.id
+                        } else {
+                            store.selectedCollectionID = Collection.favorites.id
+                        }
+                    },
+                    onToggleQueue: {
+                        queueManager.toggle()
+                    },
+                    onClearAll: {
+                        store.clearAllHistory(preserveFavorites: false)
+                    },
+                    onOpenSettings: {
+                        onCollapseRequested()
+                        AppDelegate.shared?.openSettings()
+                    },
+                    onPinOrPopout: {
+                        // Collapse or toggle action
+                        onCollapseRequested()
+                    }
+                )
+
+                // Queue active strip if queue mode is active
+                if queueManager.isActive {
+                    QueueActiveStrip(queueManager: queueManager)
+                }
+
+                // Row 2: Category chips with counts + Add button
+                CollectionTabBar(
+                    collections: store.collections,
+                    selection: $store.selectedCollectionID,
+                    store: store
+                )
+
+                // Row 3: Horizontally scrollable clipboard cards
+                ClipboardGrid(store: store, selectedID: selectedID) { _ in
+                    onCopied()
+                }
+            }
+            .padding(.top, 14)
+            .padding(.horizontal, 24)
+            .padding(.bottom, 16)
+            .frame(width: ShelfAnimation.expandedSize.width, alignment: .top)
+            .opacity(state.contentOpacity)
+            .scaleEffect(state.isExpanded ? 1.0 : 0.95, anchor: .top)
+            .offset(y: state.isExpanded ? 0 : -6)
+            .allowsHitTesting(state.isExpanded)
         }
         .frame(width: ShelfAnimation.expandedSize.width, height: ShelfAnimation.expandedSize.height, alignment: .top)
         .focusable()
@@ -91,8 +109,8 @@ struct ShelfView: View {
         }
         .onChange(of: store.selectedCollectionID) { _, _ in resetSelectionToFirstVisible() }
         .onChange(of: store.searchQuery) { _, _ in resetSelectionToFirstVisible() }
-        .onChange(of: state.phase) { _, phase in
-            guard phase == .expanded else { return }
+        .onChange(of: state.isExpanded) { _, expanded in
+            guard expanded else { return }
             isFocused = true
             if selectedID == nil { resetSelectionToFirstVisible() }
         }
@@ -131,5 +149,128 @@ struct ShelfView: View {
         let items = store.visibleItems
         if let selectedID, items.contains(where: { $0.id == selectedID }) { return }
         selectedID = items.first?.id
+    }
+}
+
+// MARK: - Collapsed Live Activity Pill for Dynamic Island
+
+private struct QueueCollapsedPill: View {
+    @ObservedObject var queueManager: PasteQueueManager
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if queueManager.isCompletedFeedback {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.system(size: 11, weight: .bold))
+                Text("Done")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.white)
+            } else {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 7, height: 7)
+                Image(systemName: "list.number")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.orange)
+                Text("\(queueManager.queue.count)")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.black)
+                .shadow(color: Color.black.opacity(0.5), radius: 6, x: 0, y: 2)
+                .overlay(
+                    Capsule().stroke(Color.orange.opacity(0.5), lineWidth: 1)
+                )
+        )
+        .frame(height: 24)
+    }
+}
+
+// MARK: - Expanded Queue Active Strip
+
+private struct QueueActiveStrip: View {
+    @ObservedObject var queueManager: PasteQueueManager
+
+    var body: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 8, height: 8)
+                Text("QUEUE ACTIVE")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.orange)
+
+                Text("• \(queueManager.queue.count) items ready to paste (⌘V)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.9))
+
+                if let first = queueManager.queue.first?.preview, !first.isEmpty {
+                    Text("• Next: \"\(first)\"")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(.white.opacity(0.6))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+
+            Spacer()
+
+            if !queueManager.queue.isEmpty {
+                Button {
+                    queueManager.skipNext()
+                } label: {
+                    Label("Skip Next", systemImage: "forward.fill")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.white.opacity(0.85))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.white.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+                .help("Skip current front item and move to next in queue")
+
+                Button {
+                    queueManager.clearQueue()
+                } label: {
+                    Text("Clear")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.white.opacity(0.85))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color.white.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+                .help("Clear all queued items")
+            }
+
+            Button {
+                queueManager.stopQueue()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.white.opacity(0.8))
+                    .padding(5)
+                    .background(Circle().fill(Color.white.opacity(0.12)))
+            }
+            .buttonStyle(.plain)
+            .help("Stop Queue Mode")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.orange.opacity(0.15))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+                )
+        )
     }
 }

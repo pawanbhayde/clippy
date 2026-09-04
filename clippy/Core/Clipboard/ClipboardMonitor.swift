@@ -123,7 +123,13 @@ final class ClipboardMonitor {
                     items[existingIndex].sourceApp = sourceApp
                 }
                 try MetadataStore.save(items)
-                onUpdateItem?(items[existingIndex])
+                let updated = items[existingIndex]
+                onUpdateItem?(updated)
+                DispatchQueue.main.async {
+                    if PasteQueueManager.shared.isActive {
+                        PasteQueueManager.shared.enqueue(updated)
+                    }
+                }
                 return
             }
 
@@ -132,6 +138,12 @@ final class ClipboardMonitor {
             items.append(item)
             try MetadataStore.save(items)
             onNewItem?(item)
+            let captured = item
+            DispatchQueue.main.async {
+                if PasteQueueManager.shared.isActive {
+                    PasteQueueManager.shared.enqueue(captured)
+                }
+            }
         } catch {
             print("ClipboardMonitor: failed to persist clipboard item: \(error)")
         }
