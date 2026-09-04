@@ -24,7 +24,7 @@ struct ClipboardCard: View {
     @State private var toastMessage: String?
     @State private var isHovered: Bool = false
 
-    static let size = CGSize(width: 175, height: 165)
+    static let size = CGSize(width: 200, height: 135)
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -71,6 +71,24 @@ struct ClipboardCard: View {
                     }
                     .buttonStyle(.plain)
                     .help("Copy extracted text from image (Vision OCR)")
+                }
+
+                // Color Quick-Copy Action Menu (Hex, RGB, HSL, Swift, NSColor, Compose)
+                if let color = detectedColor, isHovered {
+                    Menu {
+                        colorMenuItems(for: color)
+                    } label: {
+                        HStack(spacing: 3) {
+                            ColorSwatchView(color: color, size: CGSize(width: 10, height: 10), cornerRadius: 2)
+                            Image(systemName: "paintpalette.fill")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .foregroundStyle(Color.white)
+                        .padding(5)
+                        .background(Color(white: 0.22), in: Capsule())
+                    }
+                    .menuStyle(.borderlessButton)
+                    .help("Convert & copy color formats")
                 }
 
                 if devPrefs.isDeveloperModeEnabled, let text = resolvedItemText {
@@ -179,6 +197,14 @@ struct ClipboardCard: View {
                 }
             }
 
+            if let color = detectedColor {
+                Menu {
+                    colorMenuItems(for: color)
+                } label: {
+                    Label("Color Formats", systemImage: "paintpalette")
+                }
+            }
+
             Divider()
 
             if isConnectionString, let text = resolvedItemText {
@@ -195,7 +221,7 @@ struct ClipboardCard: View {
         Group {
             switch item.type {
             case .color:
-                (Color(cssColorString: item.preview ?? "") ?? Color(white: 0.14))
+                (detectedColor?.swiftUIColor ?? Color(cssColorString: item.preview ?? "") ?? Color(white: 0.14))
             case .image:
                 Color.black
             default:
@@ -286,13 +312,13 @@ struct ClipboardCard: View {
             Text(item.preview ?? "")
                 .font(item.type == .code ? .system(.caption, design: .monospaced) : .system(size: 13, weight: .regular))
                 .lineSpacing(3)
-                .lineLimit(5)
+                .lineLimit(4)
                 .multilineTextAlignment(.leading)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding(.horizontal, 12)
                 .padding(.top, 12)
-                .padding(.bottom, 38)
+                .padding(.bottom, 36)
         }
     }
 
@@ -302,23 +328,13 @@ struct ClipboardCard: View {
     }
 
     private var colorPreview: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let preview = item.preview {
-                Text(preview.uppercased())
-                    .font(.system(size: 14, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white)
-                    .shadow(color: .black.opacity(0.4), radius: 2)
-                    .padding(.horizontal, 12)
-                    .padding(.top, 14)
-            }
-            Spacer()
-        }
+        Color.clear
     }
 
     private var filePreview: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Image(systemName: "doc.fill")
-                .font(.system(size: 32))
+                .font(.system(size: 28))
                 .foregroundStyle(Color(white: 0.7))
             Text(item.preview ?? "File")
                 .font(.caption)
@@ -328,7 +344,7 @@ struct ClipboardCard: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 12)
-        .padding(.bottom, 36)
+        .padding(.bottom, 34)
     }
 
     private func placeholder(systemImage: String) -> some View {
@@ -342,8 +358,14 @@ struct ClipboardCard: View {
 
     private var bottomMetadataOverlay: some View {
         VStack(alignment: .leading, spacing: 3) {
-            // Optional domain or title overlay (seen on image cards in screenshot)
-            if item.type == .image, let domain = domainOrTitle {
+            // Color code header (from screenshot) or image domain title
+            if item.type == .color {
+                Text(detectedColor?.hexString ?? item.preview?.uppercased() ?? "COLOR")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.55), radius: 2, y: 1)
+                    .lineLimit(1)
+            } else if item.type == .image, let domain = domainOrTitle {
                 Text(domain)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white)
@@ -351,13 +373,14 @@ struct ClipboardCard: View {
                     .lineLimit(1)
             }
 
-            // Bottom bar: App icon, relative time, and optional file size
+            // Bottom bar: App icon, relative time, and optional indicators
             HStack(spacing: 6) {
                 sourceIcon
 
                 Text(item.lastUsedAt.shelfRelativeDescription)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(isDarkContentCard ? Color(white: 0.6) : Color.white.opacity(0.9))
+                    .shadow(color: (item.type == .color || item.type == .image) ? .black.opacity(0.55) : .clear, radius: 1, y: 1)
 
                 Spacer(minLength: 4)
 
@@ -373,6 +396,10 @@ struct ClipboardCard: View {
                         .foregroundStyle(Color.white.opacity(0.85))
                 }
 
+                if let color = detectedColor, item.type != .color {
+                    ColorSwatchView(color: color, size: CGSize(width: 12, height: 12), cornerRadius: 3)
+                }
+
                 if let sizeString = formattedFileSize, (item.type == .image || item.type == .file) {
                     Text(sizeString)
                         .font(.system(size: 10, weight: .semibold))
@@ -382,12 +409,12 @@ struct ClipboardCard: View {
         }
         .padding(.horizontal, 10)
         .padding(.bottom, 10)
-        .padding(.top, (item.type == .image || item.type == .color) ? 20 : 0)
+        .padding(.top, (item.type == .image || item.type == .color) ? 26 : 0)
         .background(
             (item.type == .image || item.type == .color)
                 ? AnyView(
                     LinearGradient(
-                        colors: [.clear, Color.black.opacity(0.4), Color.black.opacity(0.88)],
+                        colors: [.clear, Color.black.opacity(0.32), Color.black.opacity(0.72)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -450,6 +477,63 @@ struct ClipboardCard: View {
     private var isJSON: Bool {
         guard devPrefs.isDeveloperModeEnabled, let text = resolvedItemText else { return false }
         return JSONTransformations.isJSON(text)
+    }
+
+    // MARK: - Color Inspector & Palette Actions
+
+    private var detectedColor: ParsedColor? {
+        if item.type == .color {
+            return ColorTransformations.parse(item.preview ?? "") ?? (resolvedItemText.flatMap { ColorTransformations.parse($0) })
+        }
+        if let text = resolvedItemText {
+            return ColorDetector.extractFirstColor(from: text)
+        }
+        return nil
+    }
+
+    @ViewBuilder
+    private func colorMenuItems(for color: ParsedColor) -> some View {
+        Button {
+            ClipboardWriter.writeText(color.hexString)
+            showCopiedToast("Copied Hex")
+        } label: {
+            Label("Hex: \(color.hexString)", systemImage: "number")
+        }
+
+        Button {
+            ClipboardWriter.writeText(color.cssRGB)
+            showCopiedToast("Copied CSS RGB")
+        } label: {
+            Label("CSS RGB: \(color.cssRGB)", systemImage: "circle.grid.3x3.fill")
+        }
+
+        Button {
+            ClipboardWriter.writeText(color.cssHSL)
+            showCopiedToast("Copied CSS HSL")
+        } label: {
+            Label("CSS HSL: \(color.cssHSL)", systemImage: "circle.lefthalf.filled")
+        }
+
+        Button {
+            ClipboardWriter.writeText(color.swiftColor)
+            showCopiedToast("Copied Swift Color")
+        } label: {
+            Label("Swift: \(color.swiftColor)", systemImage: "swift")
+        }
+
+        Button {
+            ClipboardWriter.writeText(color.swiftNSColor)
+            showCopiedToast("Copied NSColor")
+        } label: {
+            Label("NSColor: \(color.swiftNSColor)", systemImage: "apple.logo")
+        }
+
+        Button {
+            ClipboardWriter.writeText(color.androidCompose)
+            showCopiedToast("Copied Compose Color")
+        } label: {
+            Label("Android: \(color.androidCompose)", systemImage: "laptopcomputer.and.iphone")
+        }
     }
 
     @ViewBuilder
@@ -550,104 +634,27 @@ struct ClipboardCard: View {
 }
 
 extension Date {
-    /// Compact relative time for the card footer: "now", "23m ago",
-    /// "2h ago", "3d ago".
+    /// Compact relative time for the card footer: "just now", "35 min ago", "1 hr ago", "2 hr ago".
     var shelfRelativeDescription: String {
         let seconds = max(0, Date().timeIntervalSince(self))
         switch seconds {
-        case ..<60: return "now"
-        case ..<3600: return "\(Int(seconds / 60))m ago"
-        case ..<86400: return "\(Int(seconds / 3600))h ago"
-        default: return "\(Int(seconds / 86400))d ago"
+        case ..<60: return "just now"
+        case ..<3600: return "\(max(1, Int(seconds / 60))) min ago"
+        case ..<86400:
+            let hours = max(1, Int(seconds / 3600))
+            return "\(hours) \(hours == 1 ? "hr" : "hrs") ago"
+        default:
+            let days = max(1, Int(seconds / 86400))
+            return "\(days) \(days == 1 ? "day" : "days") ago"
         }
     }
 }
 
 extension Color {
-    /// Parses a hex (#rgb/#rgba/#rrggbb/#rrggbbaa), rgb()/rgba(), or
-    /// hsl()/hsla() string as captured by `ColorDetector`.
+    /// Parses a CSS or hex color string using `ColorTransformations`.
     init?(cssColorString raw: String) {
-        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if value.hasPrefix("#"), let color = Color.fromHex(value) {
-            self = color
-        } else if value.lowercased().hasPrefix("rgb"), let color = Color.fromRGBFunction(value) {
-            self = color
-        } else if value.lowercased().hasPrefix("hsl"), let color = Color.fromHSLFunction(value) {
-            self = color
-        } else {
-            return nil
-        }
-    }
-
-    private static func fromHex(_ hex: String) -> Color? {
-        var digits = Array(hex.dropFirst())
-        switch digits.count {
-        case 3, 4:
-            digits = digits.flatMap { [$0, $0] }
-        case 6, 8:
-            break
-        default:
-            return nil
-        }
-        guard let value = UInt64(String(digits), radix: 16) else { return nil }
-
-        let hasAlpha = digits.count == 8
-        let r, g, b, a: Double
-        if hasAlpha {
-            r = Double((value >> 24) & 0xFF) / 255
-            g = Double((value >> 16) & 0xFF) / 255
-            b = Double((value >> 8) & 0xFF) / 255
-            a = Double(value & 0xFF) / 255
-        } else {
-            r = Double((value >> 16) & 0xFF) / 255
-            g = Double((value >> 8) & 0xFF) / 255
-            b = Double(value & 0xFF) / 255
-            a = 1
-        }
-        return Color(red: r, green: g, blue: b, opacity: a)
-    }
-
-    private static func fromRGBFunction(_ string: String) -> Color? {
-        let components = numericComponents(in: string)
-        guard components.count >= 3 else { return nil }
-        return Color(
-            red: components[0] / 255,
-            green: components[1] / 255,
-            blue: components[2] / 255,
-            opacity: components.count > 3 ? components[3] : 1
-        )
-    }
-
-    private static func fromHSLFunction(_ string: String) -> Color? {
-        let components = numericComponents(in: string)
-        guard components.count >= 3 else { return nil }
-        let (r, g, b) = hslToRGB(h: components[0] / 360, s: components[1] / 100, l: components[2] / 100)
-        return Color(red: r, green: g, blue: b, opacity: components.count > 3 ? components[3] : 1)
-    }
-
-    private static func numericComponents(in string: String) -> [Double] {
-        guard let open = string.firstIndex(of: "("), let close = string.firstIndex(of: ")") else { return [] }
-        return string[string.index(after: open)..<close]
-            .split(separator: ",")
-            .compactMap { Double($0.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: "%", with: "")) }
-    }
-
-    private static func hslToRGB(h: Double, s: Double, l: Double) -> (Double, Double, Double) {
-        guard s > 0 else { return (l, l, l) }
-
-        func hueToRGB(_ p: Double, _ q: Double, _ t: Double) -> Double {
-            var t = t
-            if t < 0 { t += 1 }
-            if t > 1 { t -= 1 }
-            if t < 1 / 6 { return p + (q - p) * 6 * t }
-            if t < 1 / 2 { return q }
-            if t < 2 / 3 { return p + (q - p) * (2 / 3 - t) * 6 }
-            return p
-        }
-
-        let q = l < 0.5 ? l * (1 + s) : l + s - l * s
-        let p = 2 * l - q
-        return (hueToRGB(p, q, h + 1 / 3), hueToRGB(p, q, h), hueToRGB(p, q, h - 1 / 3))
+        guard let parsed = ColorTransformations.parse(raw) else { return nil }
+        self = parsed.swiftUIColor
     }
 }
 

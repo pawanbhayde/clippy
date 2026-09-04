@@ -18,7 +18,7 @@ enum ShelfAnimation {
     /// Size of the resting collapsed notch capsule.
     static let collapsedSize = CGSize(width: 140, height: 28)
     /// Size of the fully expanded shelf matching the widescreen custom notch dock.
-    static let expandedSize = CGSize(width: 880, height: 320)
+    static let expandedSize = CGSize(width: 880, height: 290)
 }
 
 /// The discrete stages of the capsule ↔ shelf state.

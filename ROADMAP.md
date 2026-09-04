@@ -11,7 +11,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 - [x] **3. Built-in Image OCR & Text Extractor**
 - [ ] **4. Instant Text Transformers ("Paste As...")**
 - [ ] **5. Snippet Templates with Dynamic Placeholders**
-- [ ] **6. Color Inspector & Palette Converter**
+- [x] **6. Color Inspector & Palette Converter**
 - [ ] **7. Secret Auto-Masking & Auto-Purge Timer**
 - [ ] **8. Notch "Drop Zone" / Temporary Stash**
 - [ ] **9. Search Operators & App Filters**

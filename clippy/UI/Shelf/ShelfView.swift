@@ -23,7 +23,6 @@ struct ShelfView: View {
             NotchShelfShape()
                 .fill(Color.black)
                 .frame(width: state.currentSize.width, height: state.currentSize.height)
-                .shadow(color: Color.black.opacity(state.isExpanded ? 0.45 : 0), radius: 16, x: 0, y: 6)
                 .opacity(state.isExpanded ? 1 : (queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) ? 1 : 0))
 
             // Collapsed Pill Indicator (if Queue is active)
@@ -183,7 +182,6 @@ private struct QueueCollapsedPill: View {
         .background(
             Capsule()
                 .fill(Color.black)
-                .shadow(color: Color.black.opacity(0.5), radius: 6, x: 0, y: 2)
                 .overlay(
                     Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1)
                 )

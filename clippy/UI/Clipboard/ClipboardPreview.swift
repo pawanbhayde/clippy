@@ -106,11 +106,21 @@ struct ClipboardPreview: View {
     private var standardContentView: some View {
         switch item.type {
         case .text, .url, .code:
+            let text = AssetStore.readText(for: item) ?? item.preview ?? ""
+            let detectedColor = ColorDetector.extractFirstColor(from: text)
             ScrollView {
-                Text(AssetStore.readText(for: item) ?? item.preview ?? "")
-                    .font(item.type == .code ? .system(.body, design: .monospaced) : .body)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(text)
+                        .font(item.type == .code ? .system(.body, design: .monospaced) : .body)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+
+                    if let detectedColor {
+                        Divider()
+                            .padding(.vertical, 4)
+                        ColorInspectorView(color: detectedColor)
+                    }
+                }
             }
         case .richText:
             ScrollView {
@@ -174,9 +184,16 @@ struct ClipboardPreview: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         case .color:
-            if let preview = item.preview, let color = Color(cssColorString: preview) {
+            let color = ColorDetector.parseColor(item.preview ?? "")
+                ?? (AssetStore.readText(for: item).flatMap { ColorDetector.parseColor($0) })
+                ?? ColorDetector.extractFirstColor(from: AssetStore.readText(for: item) ?? "")
+            if let color {
+                ScrollView {
+                    ColorInspectorView(color: color)
+                }
+            } else if let preview = item.preview, let fallbackColor = Color(cssColorString: preview) {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(color)
+                    .fill(fallbackColor)
                     .overlay {
                         Text(preview)
                             .font(.title2.monospaced())
@@ -216,3 +233,90 @@ struct ClipboardPreview: View {
         }
     }
 }
+
+// MARK: - Color Inspector & Palette Converter View
+
+private struct ColorInspectorView: View {
+    let color: ParsedColor
+    @State private var copiedFormat: ColorFormat?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Header with Large Swatch and Specs
+            HStack(spacing: 14) {
+                ColorSwatchView(color: color, size: CGSize(width: 50, height: 50), cornerRadius: 10)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(color.hexString)
+                        .font(.system(size: 17, weight: .bold, design: .monospaced))
+                        .foregroundStyle(.white)
+
+                    Text(color.cssRGB)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.7))
+
+                    Text(color.cssHSL)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(Color(white: 0.5))
+                }
+
+                Spacer()
+            }
+            .padding(12)
+            .background(Color(white: 0.12), in: RoundedRectangle(cornerRadius: 10))
+
+            // Palette Converter Grid / List
+            VStack(alignment: .leading, spacing: 8) {
+                Text("CONVERT & COPY")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color(white: 0.5))
+
+                ForEach(ColorFormat.allCases) { format in
+                    let value = format.formattedValue(for: color)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(format.rawValue)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(white: 0.55))
+
+                            Text(value)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundStyle(.white)
+                                .lineLimit(1)
+                                .textSelection(.enabled)
+                        }
+
+                        Spacer()
+
+                        Button {
+                            ClipboardWriter.writeText(value)
+                            copiedFormat = format
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                                if copiedFormat == format {
+                                    copiedFormat = nil
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: copiedFormat == format ? "checkmark" : "doc.on.doc")
+                                Text(copiedFormat == format ? "Copied" : "Copy")
+                            }
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(copiedFormat == format ? Color.black : Color.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule().fill(copiedFormat == format ? Color.white : Color(white: 0.22))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(white: 0.14), in: RoundedRectangle(cornerRadius: 6))
+                }
+            }
+        }
+    }
+}
+
