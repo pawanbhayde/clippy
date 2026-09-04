@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		2C4E2204304AC96B007453A7 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 2CE22FA1304AA59800A8B3B1 /* LaunchAtLogin */; };
+		A5762236DB39687E0C29C973 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 9BDCDC2B895FB38A3899EC59 /* KeyboardShortcuts */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		2CE22F7E304AA59800A8B3B1 /* clippy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = clippy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +28,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2C4E2204304AC96B007453A7 /* LaunchAtLogin in Frameworks */,
+				A5762236DB39687E0C29C973 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,8 @@
 			);
 			name = clippy;
 			packageProductDependencies = (
+				9BDCDC2B895FB38A3899EC59 /* KeyboardShortcuts */,
+				2CE22FA1304AA59800A8B3B1 /* LaunchAtLogin */,
 			);
 			productName = clippy;
 			productReference = 2CE22F7E304AA59800A8B3B1 /* clippy.app */;
@@ -94,6 +103,10 @@
 			);
 			mainGroup = 2CE22F75304AA59800A8B3B1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				83E6EE8F53DE2BCEE91C277C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				2CE22FA0304AA59800A8B3B1 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2CE22F7F304AA59800A8B3B1 /* Products */;
 			projectDirPath = "";
@@ -255,6 +268,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -285,6 +299,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -325,6 +340,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		2CE22FA0304AA59800A8B3B1 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		83E6EE8F53DE2BCEE91C277C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2CE22FA1304AA59800A8B3B1 /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2CE22FA0304AA59800A8B3B1 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
+			productName = LaunchAtLogin;
+		};
+		9BDCDC2B895FB38A3899EC59 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83E6EE8F53DE2BCEE91C277C /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 2CE22F76304AA59800A8B3B1 /* Project object */;
 }
