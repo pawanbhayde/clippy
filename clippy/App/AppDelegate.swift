@@ -5,6 +5,10 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+    static var shared: AppDelegate? {
+        NSApp.delegate as? AppDelegate
+    }
+
     private var statusItem: NSStatusItem?
     private var shelfController: ShelfController?
     private var settingsWindow: NSWindow?
@@ -141,7 +145,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updatePauseMenuItem()
     }
 
-    @objc private func openSettings() {
+    @objc func openSettings() {
         if let settingsWindow = settingsWindow {
             settingsWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)

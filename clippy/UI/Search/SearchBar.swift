@@ -6,7 +6,7 @@ struct SearchBar: View {
     @Binding var text: String
     var isFavoritesActive: Bool = false
     var onToggleFavorites: (() -> Void)? = nil
-    var onToggleGrid: (() -> Void)? = nil
+    var onOpenSettings: (() -> Void)? = nil
     var onPinOrPopout: (() -> Void)? = nil
 
     var body: some View {
@@ -57,11 +57,11 @@ struct SearchBar: View {
                 .buttonStyle(.plain)
                 .help("Filter Favorites")
 
-                // 2. Grid / Collections toggle
+                // 2. Settings button
                 Button {
-                    onToggleGrid?()
+                    onOpenSettings?()
                 } label: {
-                    Image(systemName: "square.grid.2x2")
+                    Image(systemName: "gearshape")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color(white: 0.75))
                         .frame(width: 30, height: 30)
@@ -70,14 +70,14 @@ struct SearchBar: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .help("Collections Overview")
+                .help("Clippy Settings")
 
-                // 3. Pop-out / Detach window
+                // 3. Close Clippy button
                 Button {
                     onPinOrPopout?()
                 } label: {
-                    Image(systemName: "macwindow.on.rectangle")
-                        .font(.system(size: 12, weight: .semibold))
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(Color(white: 0.75))
                         .frame(width: 30, height: 30)
                         .background(
@@ -85,7 +85,7 @@ struct SearchBar: View {
                         )
                 }
                 .buttonStyle(.plain)
-                .help("Open Full Window")
+                .help("Close Clippy")
             }
         }
         .padding(.horizontal, 4)

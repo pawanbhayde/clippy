@@ -15,6 +15,7 @@ final class ShelfController {
     private let globalShortcut: GlobalShortcut
     private let animationState = ShelfAnimationState()
     private let clipboardStore = ClipboardStore()
+    private var previousApp: NSRunningApplication?
 
     init(mouseTracker: MouseTracker = MouseTracker(), globalShortcut: GlobalShortcut? = nil) {
         self.mouseTracker = mouseTracker
@@ -25,7 +26,15 @@ final class ShelfController {
         let hostingView = NonFocusRingHostingView(rootView: ShelfView(
             state: animationState,
             store: clipboardStore,
-            onCopied: { [weak self] in self?.collapseImmediately() },
+            onCopied: { [weak self] in
+                guard let self else { return }
+                let target = self.previousApp
+                self.collapseImmediately()
+                let isDirectPasteEnabled = UserDefaults.standard.object(forKey: "isDirectPasteEnabled") as? Bool ?? true
+                if isDirectPasteEnabled {
+                    ClipboardWriter.pasteToFrontmostApp(targetApp: target)
+                }
+            },
             onCollapseRequested: { [weak self] in self?.collapseImmediately() }
         ))
         hostingView.focusRingType = .none
@@ -88,6 +97,10 @@ final class ShelfController {
 
     func expand() {
         guard !isExpanded else { return }
+        let frontmost = NSWorkspace.shared.frontmostApplication
+        if let frontmost, frontmost.processIdentifier != NSRunningApplication.current.processIdentifier {
+            previousApp = frontmost
+        }
         isExpanded = true
         panel.ignoresMouseEvents = false
         animationState.expand()
@@ -124,4 +137,6 @@ private final class NonFocusRingHostingView<Content: View>: NSHostingView<Conten
         // Suppress drawing any focus ring mask
     }
 }
+
+
 

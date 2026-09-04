@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - SwiftUI view rendering a single clipboard item card
 
@@ -36,6 +37,9 @@ struct ClipboardCard: View {
         .contentShape(RoundedRectangle(cornerRadius: 18))
         .onTapGesture {
             onActivate?(item)
+        }
+        .onDrag {
+            item.makeItemProvider()
         }
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
@@ -589,3 +593,72 @@ extension Color {
         return (hueToRGB(p, q, h + 1 / 3), hueToRGB(p, q, h), hueToRGB(p, q, h - 1 / 3))
     }
 }
+
+// MARK: - Drag & Drop Item Provider Support
+
+extension ClipboardItem {
+    /// Constructs an `NSItemProvider` representing this clipboard item for
+    /// drag-and-drop operations into external apps (WhatsApp, Telegram, Finder, Slack, Discord, etc.).
+    func makeItemProvider() -> NSItemProvider {
+        switch type {
+        case .image:
+            var fileURL: URL?
+            if let path = storagePath ?? thumbnailPath, FileManager.default.fileExists(atPath: path) {
+                fileURL = URL(fileURLWithPath: path)
+            } else if let data = AssetStore.readImage(for: id, format: .png) {
+                fileURL = try? AssetStore.writeImage(data, for: id, format: .png)
+            }
+
+            if let fileURL, let provider = NSItemProvider(contentsOf: fileURL) {
+                return provider
+            } else if let data = AssetStore.readImage(for: id, format: .png) {
+                let provider = NSItemProvider()
+                provider.registerDataRepresentation(forTypeIdentifier: UTType.png.identifier, visibility: .all) { completion in
+                    completion(data, nil)
+                    return nil
+                }
+                return provider
+            } else {
+                return NSItemProvider()
+            }
+
+        case .file:
+            if let path = storagePath, FileManager.default.fileExists(atPath: path) {
+                let fileURL = URL(fileURLWithPath: path)
+                if let provider = NSItemProvider(contentsOf: fileURL) {
+                    return provider
+                }
+                return NSItemProvider(object: fileURL as NSURL)
+            }
+            return NSItemProvider()
+
+        case .url:
+            let text = AssetStore.readText(for: self) ?? preview ?? ""
+            if let url = URL(string: text) {
+                return NSItemProvider(object: url as NSURL)
+            }
+            return NSItemProvider(object: text as NSString)
+
+        case .text, .code:
+            let text = (isEncrypted ? preview : AssetStore.readText(for: self)) ?? preview ?? ""
+            return NSItemProvider(object: text as NSString)
+
+        case .color:
+            let hex = preview ?? ""
+            return NSItemProvider(object: hex as NSString)
+
+        case .richText:
+            let provider = NSItemProvider()
+            if let rtfData = AssetStore.readRichText(for: self) {
+                provider.registerDataRepresentation(forTypeIdentifier: UTType.rtf.identifier, visibility: .all) { completion in
+                    completion(rtfData, nil)
+                    return nil
+                }
+            }
+            let plain = (isEncrypted ? preview : AssetStore.readText(for: self)) ?? preview ?? ""
+            provider.registerObject(plain as NSString, visibility: .all)
+            return provider
+        }
+    }
+}
+

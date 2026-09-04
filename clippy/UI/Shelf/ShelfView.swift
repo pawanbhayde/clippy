@@ -39,12 +39,9 @@ struct ShelfView: View {
                                         store.selectedCollectionID = Collection.favorites.id
                                     }
                                 },
-                                onToggleGrid: {
-                                    // Cycles to next collection tab
-                                    if let idx = store.collections.firstIndex(where: { $0.id == store.selectedCollectionID }) {
-                                        let nextIdx = (idx + 1) % store.collections.count
-                                        store.selectedCollectionID = store.collections[nextIdx].id
-                                    }
+                                onOpenSettings: {
+                                    onCollapseRequested()
+                                    AppDelegate.shared?.openSettings()
                                 },
                                 onPinOrPopout: {
                                     // Collapse or toggle action

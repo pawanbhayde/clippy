@@ -6,6 +6,7 @@ import KeyboardShortcuts
 
 struct GeneralSettingsView: View {
     @ObservedObject private var devPrefs = DeveloperPreferences.shared
+    @AppStorage("isDirectPasteEnabled") private var isDirectPasteEnabled = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -57,6 +58,22 @@ struct GeneralSettingsView: View {
                     .font(.body)
 
                 Text("Detects connection strings and JSON payloads, showing contextual actions (parse connection, mask password, generate .env, generate Prisma URL, format JSON, minify, convert to TypeScript interface, convert to Zod schema, copy as code block) directly on clipboard cards.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 20)
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Direct Paste")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Toggle("Automatically paste on click", isOn: $isDirectPasteEnabled)
+                    .font(.body)
+
+                Text("When clicking a card in Clippy Island, automatically paste the item directly into the active application.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.leading, 20)
