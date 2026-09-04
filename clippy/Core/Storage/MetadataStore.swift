@@ -20,18 +20,38 @@ enum MetadataStore {
     }()
 
     /// Loads all clipboard items from disk, bootstrapping storage first.
-    /// Deduplicates items by contentHash (preserving the most recent use and favorite status)
-    /// and persists back if duplicates were found. Returns an empty array if metadata.json is empty.
+    /// Purges any expired sensitive items, deduplicates items by contentHash
+    /// (preserving the most recent use and favorite status) and persists back if
+    /// changes occurred. Returns an empty array if metadata.json is empty.
     static func load() throws -> [ClipboardItem] {
         try LocalStorage.bootstrap()
         let data = try Data(contentsOf: LocalStorage.metadataFileURL)
         guard !data.isEmpty else { return [] }
         let items = try decoder.decode([ClipboardItem].self, from: data)
-        let unique = deduplicate(items)
+        let unexpired = purgeExpiredItemsIfNeeded(items)
+        let unique = deduplicate(unexpired)
         if unique.count != items.count {
             try? save(unique)
         }
         return unique
+    }
+
+    /// Discards and deletes on-disk assets for any items whose scheduledPurgeAt has passed.
+    static func purgeExpiredItemsIfNeeded(_ items: [ClipboardItem]) -> [ClipboardItem] {
+        let now = Date()
+        var hasExpired = false
+        let unexpired = items.filter { item in
+            if let purgeAt = item.scheduledPurgeAt, purgeAt <= now {
+                hasExpired = true
+                AssetStore.deleteAssets(for: item.id)
+                return false
+            }
+            return true
+        }
+        if hasExpired {
+            try? save(unexpired)
+        }
+        return unexpired
     }
 
     /// Overwrites metadata.json with the given items.

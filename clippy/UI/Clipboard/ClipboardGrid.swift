@@ -34,6 +34,9 @@ struct ClipboardGrid: View {
                                     },
                                     onToggleFavorite: { favoritedItem in
                                         store.toggleFavorite(favoritedItem)
+                                    },
+                                    onDelete: { deletedItem in
+                                        store.deleteItem(deletedItem)
                                     }
                                 )
                                 .id(item.id)

@@ -11,6 +11,9 @@ final class PrivacyPreferences: ObservableObject, @unchecked Sendable {
     enum Keys {
         static let blockSensitiveItems = "Privacy_blockSensitiveItems"
         static let alwaysEncryptSensitive = "Privacy_alwaysEncryptSensitive"
+        static let autoMaskSensitive = "Privacy_autoMaskSensitive"
+        static let autoPurgeSensitive = "Privacy_autoPurgeSensitive"
+        static let autoPurgeInterval = "Privacy_autoPurgeInterval"
     }
 
     @Published var blockSensitiveItems: Bool {
@@ -22,6 +25,24 @@ final class PrivacyPreferences: ObservableObject, @unchecked Sendable {
     @Published var alwaysEncryptSensitive: Bool {
         didSet {
             UserDefaults.standard.set(alwaysEncryptSensitive, forKey: Keys.alwaysEncryptSensitive)
+        }
+    }
+
+    @Published var autoMaskSensitive: Bool {
+        didSet {
+            UserDefaults.standard.set(autoMaskSensitive, forKey: Keys.autoMaskSensitive)
+        }
+    }
+
+    @Published var autoPurgeSensitive: Bool {
+        didSet {
+            UserDefaults.standard.set(autoPurgeSensitive, forKey: Keys.autoPurgeSensitive)
+        }
+    }
+
+    @Published var autoPurgeInterval: TimeInterval {
+        didSet {
+            UserDefaults.standard.set(autoPurgeInterval, forKey: Keys.autoPurgeInterval)
         }
     }
 
@@ -42,6 +63,25 @@ final class PrivacyPreferences: ObservableObject, @unchecked Sendable {
             self.alwaysEncryptSensitive = UserDefaults.standard.bool(forKey: Keys.alwaysEncryptSensitive)
         } else {
             self.alwaysEncryptSensitive = true
+        }
+
+        if UserDefaults.standard.object(forKey: Keys.autoMaskSensitive) != nil {
+            self.autoMaskSensitive = UserDefaults.standard.bool(forKey: Keys.autoMaskSensitive)
+        } else {
+            self.autoMaskSensitive = true
+        }
+
+        if UserDefaults.standard.object(forKey: Keys.autoPurgeSensitive) != nil {
+            self.autoPurgeSensitive = UserDefaults.standard.bool(forKey: Keys.autoPurgeSensitive)
+        } else {
+            self.autoPurgeSensitive = true
+        }
+
+        if UserDefaults.standard.object(forKey: Keys.autoPurgeInterval) != nil {
+            let val = UserDefaults.standard.double(forKey: Keys.autoPurgeInterval)
+            self.autoPurgeInterval = val > 0 ? val : 60.0
+        } else {
+            self.autoPurgeInterval = 60.0
         }
 
         self.excludedApps = AppInfoProvider.excludedApps

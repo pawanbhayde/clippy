@@ -12,7 +12,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 - [ ] **4. Instant Text Transformers ("Paste As...")**
 - [ ] **5. Snippet Templates with Dynamic Placeholders**
 - [x] **6. Color Inspector & Palette Converter**
-- [ ] **7. Secret Auto-Masking & Auto-Purge Timer**
+- [x] **7. Secret Auto-Masking & Auto-Purge Timer**
 - [ ] **8. Notch "Drop Zone" / Temporary Stash**
 - [ ] **9. Search Operators & App Filters**
 

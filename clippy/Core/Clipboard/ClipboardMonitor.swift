@@ -93,23 +93,29 @@ final class ClipboardMonitor {
     private func handle(item rawItem: ClipboardItem, payload: ClipboardPayload, sourceApp: AppSource?) {
         // Classify (and flag sensitivity) before this item ever touches disk.
         let classification = ContentClassifier.classify(payload)
+        let isSourcePasswordManager = SensitiveDataDetector.isPasswordManager(bundleId: sourceApp?.bundleId)
+        let isSensitive = classification.isSensitive || isSourcePasswordManager
 
         // If sensitive content is configured to be blocked entirely, drop it immediately.
-        if classification.isSensitive && PrivacyPreferences.shared.blockSensitiveItems {
+        if isSensitive && PrivacyPreferences.shared.blockSensitiveItems {
             return
         }
 
         var item = rawItem
         item.type = classification.type
-        item.isSensitive = classification.isSensitive
+        item.isSensitive = isSensitive
         item.sourceApp = sourceApp
 
-        let shouldEncrypt = classification.isSensitive && PrivacyPreferences.shared.alwaysEncryptSensitive
+        let shouldEncrypt = isSensitive && PrivacyPreferences.shared.alwaysEncryptSensitive
         item.isEncrypted = shouldEncrypt
 
-        // Mask preview if encrypted so plaintext sensitive data is never saved to metadata.json
-        if shouldEncrypt {
+        // Mask preview if encrypted or autoMaskSensitive so plaintext sensitive data is never saved to metadata.json
+        if shouldEncrypt || (isSensitive && PrivacyPreferences.shared.autoMaskSensitive) {
             item.preview = "••••••••"
+        }
+
+        if isSensitive && PrivacyPreferences.shared.autoPurgeSensitive {
+            item.scheduledPurgeAt = Date().addingTimeInterval(PrivacyPreferences.shared.autoPurgeInterval)
         }
 
         do {
@@ -121,6 +127,9 @@ final class ClipboardMonitor {
                 items[existingIndex].lastUsedAt = item.createdAt
                 if let sourceApp {
                     items[existingIndex].sourceApp = sourceApp
+                }
+                if isSensitive && PrivacyPreferences.shared.autoPurgeSensitive {
+                    items[existingIndex].scheduledPurgeAt = Date().addingTimeInterval(PrivacyPreferences.shared.autoPurgeInterval)
                 }
                 try MetadataStore.save(items)
                 let updated = items[existingIndex]

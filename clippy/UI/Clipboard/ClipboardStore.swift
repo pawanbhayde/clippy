@@ -31,6 +31,7 @@ final class ClipboardStore: ObservableObject {
         if autoRefresh {
             refreshTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
                 Task { @MainActor in
+                    self?.purgeExpiredItems()
                     self?.reload()
                     self?.reloadCollections()
                 }
@@ -166,6 +167,37 @@ final class ClipboardStore: ObservableObject {
     func toggleFavorite(_ item: ClipboardItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         items[index].isFavorite.toggle()
+        do {
+            try MetadataStore.save(items)
+        } catch {
+            loadError = "\(error)"
+        }
+    }
+
+    /// Discards expired sensitive items from in-memory items and storage.
+    func purgeExpiredItems() {
+        let now = Date()
+        var hasExpired = false
+        items.removeAll { item in
+            if let purgeAt = item.scheduledPurgeAt, purgeAt <= now {
+                hasExpired = true
+                AssetStore.deleteAssets(for: item.id)
+                indexedIDs.remove(item.id)
+                return true
+            }
+            return false
+        }
+        if hasExpired {
+            try? MetadataStore.save(items)
+        }
+    }
+
+    /// Deletes a single clipboard item from memory, index, and on-disk assets.
+    func deleteItem(_ item: ClipboardItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        AssetStore.deleteAssets(for: item.id)
+        indexedIDs.remove(item.id)
+        items.remove(at: index)
         do {
             try MetadataStore.save(items)
         } catch {

@@ -68,4 +68,27 @@ enum SensitiveDataDetector {
     static func isSensitive(_ text: String) -> Bool {
         !categories(in: text).isEmpty
     }
+
+    /// Known bundle identifiers for password managers and credential tools on macOS
+    public static let passwordManagerBundleIDs: Set<String> = [
+        "com.1password.1password",
+        "com.1password.onepassword",
+        "com.agilebits.onepassword7",
+        "com.bitwarden.desktop",
+        "com.keepassxc.keepassxc",
+        "org.keepassxc.keepassxc",
+        "com.dashlane.dashlane",
+        "com.apple.keychainaccess",
+        "com.apple.Passwords",
+        "com.lastpass.LastPass",
+        "com.nordpass.macos",
+        "com.enpass.Enpass",
+        "com.roboform.mac"
+    ]
+
+    /// Checks if a bundle ID belongs to a known password manager
+    public static func isPasswordManager(bundleId: String?) -> Bool {
+        guard let bundleId = bundleId?.lowercased() else { return false }
+        return passwordManagerBundleIDs.contains(bundleId)
+    }
 }

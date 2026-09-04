@@ -37,6 +37,42 @@ struct PrivacySettingsView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.leading, 20)
+
+                Toggle("Auto-mask sensitive items (••••••••)", isOn: $privacyPrefs.autoMaskSensitive)
+                    .disabled(privacyPrefs.blockSensitiveItems)
+                    .help("Hide passwords, tokens, and OTPs with click-to-reveal dots.")
+
+                Text("Conceals sensitive clips with bullet dots to prevent accidental exposure during presentations or screen sharing.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 20)
+
+                Toggle("Auto-purge sensitive items", isOn: $privacyPrefs.autoPurgeSensitive)
+                    .disabled(privacyPrefs.blockSensitiveItems)
+                    .help("Automatically delete 2FA OTPs, password-manager copies, and secrets after countdown.")
+
+                Text("Automatically removes sensitive items from memory and storage after the specified timer.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 20)
+
+                if privacyPrefs.autoPurgeSensitive && !privacyPrefs.blockSensitiveItems {
+                    HStack {
+                        Text("Purge countdown timer:")
+                            .font(.caption)
+                        Picker("", selection: $privacyPrefs.autoPurgeInterval) {
+                            Text("30 seconds").tag(TimeInterval(30))
+                            Text("60 seconds (1 minute)").tag(TimeInterval(60))
+                            Text("2 minutes").tag(TimeInterval(120))
+                            Text("5 minutes").tag(TimeInterval(300))
+                            Text("15 minutes").tag(TimeInterval(900))
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: 180)
+                    }
+                    .padding(.leading, 20)
+                }
             }
 
             Divider()

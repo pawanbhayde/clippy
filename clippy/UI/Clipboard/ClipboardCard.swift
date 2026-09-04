@@ -17,10 +17,13 @@ struct ClipboardCard: View {
     var onDragStarted: ((ClipboardItem) -> Void)?
     /// Called when the user toggles the favorite status of this card.
     var onToggleFavorite: ((ClipboardItem) -> Void)?
+    /// Called when the user requests immediate deletion/purging of this card.
+    var onDelete: ((ClipboardItem) -> Void)?
 
     @State private var isRevealed: Bool = false
     @State private var revealedContent: String?
     @ObservedObject private var devPrefs = DeveloperPreferences.shared
+    @ObservedObject private var privacyPrefs = PrivacyPreferences.shared
     @State private var toastMessage: String?
     @State private var isHovered: Bool = false
 
@@ -205,12 +208,28 @@ struct ClipboardCard: View {
                 }
             }
 
+            if isSensitiveOrMasked {
+                Button {
+                    toggleReveal()
+                } label: {
+                    Label(isRevealed ? "Hide Secret" : "Reveal Secret", systemImage: isRevealed ? "eye.slash" : "eye")
+                }
+            }
+
             Divider()
 
             if isConnectionString, let text = resolvedItemText {
                 connectionStringMenuItems(for: text)
             } else if isJSON, let text = resolvedItemText {
                 jsonMenuItems(for: text)
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                onDelete?(item)
+            } label: {
+                Label(item.isSensitive || item.scheduledPurgeAt != nil ? "Purge Secret Immediately" : "Delete Item", systemImage: "trash")
             }
         }
     }
@@ -230,12 +249,16 @@ struct ClipboardCard: View {
         }
     }
 
+    private var isSensitiveOrMasked: Bool {
+        (item.isSensitive || item.isEncrypted) && (privacyPrefs.autoMaskSensitive || item.isEncrypted)
+    }
+
     // MARK: - Card Content
 
     @ViewBuilder
     private var cardContent: some View {
-        if item.isEncrypted {
-            encryptedPreview
+        if isSensitiveOrMasked {
+            maskedSensitivePreview
         } else {
             switch item.type {
             case .image:
@@ -250,7 +273,7 @@ struct ClipboardCard: View {
         }
     }
 
-    private var encryptedPreview: some View {
+    private var maskedSensitivePreview: some View {
         VStack(spacing: 6) {
             if isRevealed, let content = revealedContent {
                 Text(content)
@@ -262,14 +285,21 @@ struct ClipboardCard: View {
                     .padding(12)
             } else {
                 VStack(spacing: 6) {
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 26))
-                        .foregroundStyle(Color(white: 0.6))
-                    Text("Encrypted")
-                        .font(.caption)
-                        .foregroundStyle(Color(white: 0.6))
+                    Image(systemName: item.isEncrypted ? "lock.shield.fill" : "lock.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.white.opacity(0.7))
+
+                    Text("••••••••••••")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .tracking(3)
+                        .foregroundStyle(Color.white.opacity(0.85))
+
+                    Text(item.isEncrypted ? "Encrypted Secret" : "Sensitive Secret")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.5))
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, 6)
             }
 
             Button {
@@ -279,8 +309,8 @@ struct ClipboardCard: View {
                     Image(systemName: isRevealed ? "eye.slash" : "eye")
                     Text(isRevealed ? "Hide" : "Reveal")
                 }
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color.white.opacity(0.8))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color.white.opacity(0.85))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(Capsule().fill(Color.white.opacity(0.15)))
@@ -288,7 +318,7 @@ struct ClipboardCard: View {
             .buttonStyle(.plain)
             .padding(.bottom, 36)
         }
-        .padding(8)
+        .padding(6)
     }
 
     private func toggleReveal() {
@@ -302,6 +332,9 @@ struct ClipboardCard: View {
             } else if let rtfData = AssetStore.readRichText(for: item),
                       let plain = (try? NSAttributedString(data: rtfData, options: [.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))?.string {
                 revealedContent = plain
+                isRevealed = true
+            } else if let preview = item.preview, preview != "••••••••" {
+                revealedContent = preview
                 isRevealed = true
             }
         }
@@ -384,7 +417,22 @@ struct ClipboardCard: View {
 
                 Spacer(minLength: 4)
 
-                if item.isEncrypted {
+                if let purgeAt = item.scheduledPurgeAt {
+                    TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+                        let remaining = max(0, Int(ceil(purgeAt.timeIntervalSince(timeline.date))))
+                        HStack(spacing: 3) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 8, weight: .bold))
+                            Text("\(remaining)s")
+                                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        }
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(Color.white.opacity(0.18)))
+                        .help("Auto-purges in \(remaining)s")
+                    }
+                } else if item.isEncrypted {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 9))
                         .foregroundStyle(isDarkContentCard ? Color(white: 0.6) : Color.white.opacity(0.9))
@@ -463,7 +511,7 @@ struct ClipboardCard: View {
     // MARK: - Developer Mode Contextual Actions
 
     private var resolvedItemText: String? {
-        if item.isEncrypted {
+        if item.isEncrypted || item.preview == "••••••••" {
             return AssetStore.readText(for: item)
         }
         return item.preview ?? AssetStore.readText(for: item)
