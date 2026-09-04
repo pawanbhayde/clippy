@@ -8,7 +8,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 - [x] **1. Sequential / Queue Paste ("Paste Queue")**
 - [ ] **2. Smart Scratchpad & Multi-Item Merger ("Combine & Paste")**
-- [ ] **3. Built-in Image OCR & Text Extractor**
+- [x] **3. Built-in Image OCR & Text Extractor**
 - [ ] **4. Instant Text Transformers ("Paste As...")**
 - [ ] **5. Snippet Templates with Dynamic Placeholders**
 - [ ] **6. Color Inspector & Palette Converter**

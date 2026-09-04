@@ -120,14 +120,44 @@ struct ClipboardPreview: View {
                     .textSelection(.enabled)
             }
         case .image:
-            if let path = item.storagePath ?? item.thumbnailPath, let nsImage = NSImage(contentsOfFile: path) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                Text("Image unavailable")
-                    .foregroundStyle(.secondary)
+            VStack(spacing: 12) {
+                if let path = item.storagePath ?? item.thumbnailPath, let nsImage = NSImage(contentsOfFile: path) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    Text("Image unavailable")
+                        .foregroundStyle(.secondary)
+                }
+
+                if let ocrText = item.extractedText, !ocrText.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Extracted Text (OCR)", systemImage: "text.viewfinder")
+                                .font(.caption.bold())
+                                .foregroundStyle(.white)
+                            Spacer()
+                            Button {
+                                ClipboardWriter.writeText(ocrText)
+                            } label: {
+                                Label("Copy", systemImage: "doc.on.doc")
+                                    .font(.caption2)
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
+                        Text(ocrText)
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(Color(white: 0.8))
+                            .lineLimit(6)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(8)
+                            .background(Color(white: 0.15), in: RoundedRectangle(cornerRadius: 6))
+                            .textSelection(.enabled)
+                    }
+                    .padding(.top, 4)
+                }
             }
         case .file:
             VStack(spacing: 8) {

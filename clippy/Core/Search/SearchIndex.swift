@@ -38,6 +38,7 @@ struct SearchIndex {
         var parts: [String] = []
         if let preview = item.preview { parts.append(preview) }
         if let sourceAppName = item.sourceApp?.name { parts.append(sourceAppName) }
+        if let extractedText = item.extractedText { parts.append(extractedText) }
         return parts.joined(separator: " ")
     }
 }

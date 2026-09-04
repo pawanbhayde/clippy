@@ -19,6 +19,7 @@ struct ClipboardItem: Codable, Identifiable, Equatable {
     var fileSize: Int64?
     var isSensitive: Bool
     var isEncrypted: Bool
+    var extractedText: String?
 
     init(
         id: UUID = UUID(),
@@ -34,7 +35,8 @@ struct ClipboardItem: Codable, Identifiable, Equatable {
         thumbnailPath: String? = nil,
         fileSize: Int64? = nil,
         isSensitive: Bool = false,
-        isEncrypted: Bool = false
+        isEncrypted: Bool = false,
+        extractedText: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -50,10 +52,11 @@ struct ClipboardItem: Codable, Identifiable, Equatable {
         self.fileSize = fileSize
         self.isSensitive = isSensitive
         self.isEncrypted = isEncrypted
+        self.extractedText = extractedText
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, type, createdAt, lastUsedAt, categoryIDs, isFavorite, contentHash, preview, sourceApp, storagePath, thumbnailPath, fileSize, isSensitive, isEncrypted
+        case id, type, createdAt, lastUsedAt, categoryIDs, isFavorite, contentHash, preview, sourceApp, storagePath, thumbnailPath, fileSize, isSensitive, isEncrypted, extractedText
     }
 
     init(from decoder: Decoder) throws {
@@ -72,5 +75,6 @@ struct ClipboardItem: Codable, Identifiable, Equatable {
         fileSize = try container.decodeIfPresent(Int64.self, forKey: .fileSize)
         isSensitive = try container.decodeIfPresent(Bool.self, forKey: .isSensitive) ?? false
         isEncrypted = try container.decodeIfPresent(Bool.self, forKey: .isEncrypted) ?? false
+        extractedText = try container.decodeIfPresent(String.self, forKey: .extractedText)
     }
 }

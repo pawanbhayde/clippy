@@ -82,8 +82,32 @@ final class ClipboardStore: ObservableObject {
                     }
                 }
             }
+            runBackgroundOCROnMissingItems(loaded)
         } catch {
             loadError = "\(error)"
+        }
+    }
+
+    /// Asynchronously runs Vision OCR on any image items that don't yet have extractedText.
+    private func runBackgroundOCROnMissingItems(_ loaded: [ClipboardItem]) {
+        let missingOCR = loaded.filter { $0.type == .image && $0.extractedText == nil && $0.storagePath != nil }
+        guard !missingOCR.isEmpty else { return }
+
+        Task.detached(priority: .utility) { [weak self] in
+            for item in missingOCR {
+                guard let path = item.storagePath else { continue }
+                let url = URL(fileURLWithPath: path)
+                if let text = await ImageTextExtractor.extractText(from: url) {
+                    await MainActor.run { [weak self] in
+                        guard let self else { return }
+                        if let idx = self.items.firstIndex(where: { $0.id == item.id }) {
+                            self.items[idx].extractedText = text
+                            self.searchEngine.indexNewItem(self.items[idx])
+                            try? MetadataStore.save(self.items)
+                        }
+                    }
+                }
+            }
         }
     }
 

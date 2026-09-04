@@ -52,6 +52,27 @@ struct ClipboardCard: View {
         )
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 5) {
+                // OCR "Copy Text" Button (extract text directly from screenshot/image)
+                if item.type == .image, let ocrText = item.extractedText, !ocrText.isEmpty, isHovered {
+                    Button {
+                        ClipboardWriter.writeText(ocrText)
+                        showCopiedToast("Copied Text")
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: "text.viewfinder")
+                                .font(.system(size: 10, weight: .bold))
+                            Text("Copy Text")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .foregroundStyle(Color.black)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.white))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Copy extracted text from image (Vision OCR)")
+                }
+
                 if devPrefs.isDeveloperModeEnabled, let text = resolvedItemText {
                     if isConnectionString {
                         Menu {
@@ -147,6 +168,15 @@ struct ClipboardCard: View {
                 showCopiedToast(item.isFavorite ? "Removed from Favorites" : "Marked as Favorite")
             } label: {
                 Label(item.isFavorite ? "Remove from Favorites" : "Mark as Favorite", systemImage: item.isFavorite ? "star.slash" : "star.fill")
+            }
+
+            if item.type == .image, let ocrText = item.extractedText, !ocrText.isEmpty {
+                Button {
+                    ClipboardWriter.writeText(ocrText)
+                    showCopiedToast("Copied Text")
+                } label: {
+                    Label("Copy Extracted Text (OCR)", systemImage: "text.viewfinder")
+                }
             }
 
             Divider()
@@ -335,6 +365,12 @@ struct ClipboardCard: View {
                     Image(systemName: "lock.fill")
                         .font(.system(size: 9))
                         .foregroundStyle(isDarkContentCard ? Color(white: 0.6) : Color.white.opacity(0.9))
+                }
+
+                if item.type == .image && item.extractedText != nil {
+                    Image(systemName: "text.viewfinder")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.85))
                 }
 
                 if let sizeString = formattedFileSize, (item.type == .image || item.type == .file) {

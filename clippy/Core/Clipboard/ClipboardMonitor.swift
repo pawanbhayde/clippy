@@ -152,6 +152,26 @@ final class ClipboardMonitor {
                     PasteQueueManager.shared.enqueue(captured)
                 }
             }
+
+            // Asynchronously extract OCR text from image using Vision framework
+            if case .image(let data) = payload {
+                let itemID = item.id
+                Task.detached(priority: .userInitiated) { [weak self] in
+                    if let extracted = await ImageTextExtractor.extractText(from: data) {
+                        do {
+                            var currentItems = try MetadataStore.load()
+                            if let idx = currentItems.firstIndex(where: { $0.id == itemID }) {
+                                currentItems[idx].extractedText = extracted
+                                try MetadataStore.save(currentItems)
+                                let updatedItem = currentItems[idx]
+                                self?.onUpdateItem?(updatedItem)
+                            }
+                        } catch {
+                            print("ClipboardMonitor: failed to save OCR text: \(error)")
+                        }
+                    }
+                }
+            }
         } catch {
             print("ClipboardMonitor: failed to persist clipboard item: \(error)")
         }
