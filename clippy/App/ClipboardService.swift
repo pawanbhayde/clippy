@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 
 // MARK: - Composition root wiring the clipboard capture pipeline together
 
@@ -52,6 +53,12 @@ final class ClipboardService {
     /// Resumes clipboard monitoring.
     func resume() {
         start()
+    }
+
+    /// Ingests an item directly into Clippy clipboard history (such as from drag-and-drop into the drop zone)
+    @discardableResult
+    func saveToClippy(from pasteboard: NSPasteboard) -> Bool {
+        return monitor.ingest(from: pasteboard)
     }
 
     private func runCleanup() {

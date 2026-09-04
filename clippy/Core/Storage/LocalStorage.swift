@@ -43,8 +43,12 @@ enum LocalStorage {
         rootURL.appendingPathComponent("thumbnails", isDirectory: true)
     }
 
+    static var stashDirectoryURL: URL {
+        rootURL.appendingPathComponent("stash", isDirectory: true)
+    }
+
     private static var subdirectories: [URL] {
-        [itemsDirectoryURL, imagesDirectoryURL, filesDirectoryURL, thumbnailsDirectoryURL]
+        [itemsDirectoryURL, imagesDirectoryURL, filesDirectoryURL, thumbnailsDirectoryURL, stashDirectoryURL]
     }
 
     /// Creates the root directory, its subdirectories, and an empty

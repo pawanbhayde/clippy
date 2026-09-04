@@ -5,7 +5,7 @@ import AppKit
 /// Borderless, non-activating floating panel that hosts the clipboard
 /// shelf UI. Floats above normal windows on every Space, positioned just
 /// below the notch/menu bar at the top-center of the active screen.
-final class ShelfWindow: NSPanel {
+final class ShelfWindow: NSPanel, NSDraggingDestination {
     convenience init(contentRect: NSRect = .zero) {
         self.init(
             contentRect: contentRect,
@@ -28,6 +28,37 @@ final class ShelfWindow: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
+
+        registerForDraggedTypes([
+            .fileURL,
+            .URL,
+            .tiff,
+            .png,
+            .string,
+            NSPasteboard.PasteboardType("public.file-url"),
+            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-url")
+        ])
+    }
+
+    var onDragEntered: ((NSDraggingInfo) -> NSDragOperation)?
+    var onDragUpdated: ((NSDraggingInfo) -> NSDragOperation)?
+    var onDragExited: ((NSDraggingInfo?) -> Void)?
+    var onPerformDrag: ((NSDraggingInfo) -> Bool)?
+
+    func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        return onDragEntered?(sender) ?? .copy
+    }
+
+    func draggingUpdated(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        return onDragUpdated?(sender) ?? .copy
+    }
+
+    func draggingExited(_ sender: (any NSDraggingInfo)?) {
+        onDragExited?(sender)
+    }
+
+    func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        return onPerformDrag?(sender) ?? false
     }
 
     /// Dynamically controls whether the panel can accept keyboard focus.

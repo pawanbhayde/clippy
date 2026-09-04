@@ -38,7 +38,11 @@ struct SearchIndex {
         var parts: [String] = []
         if let preview = item.preview { parts.append(preview) }
         if let sourceAppName = item.sourceApp?.name { parts.append(sourceAppName) }
+        if let bundleId = item.sourceApp?.bundleId { parts.append(bundleId) }
         if let extractedText = item.extractedText { parts.append(extractedText) }
+        if let storagePath = item.storagePath {
+            parts.append(URL(fileURLWithPath: storagePath).lastPathComponent)
+        }
         return parts.joined(separator: " ")
     }
 }

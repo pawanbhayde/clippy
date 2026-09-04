@@ -24,7 +24,7 @@ final class ShelfController {
         self.globalShortcut = globalShortcut ?? GlobalShortcut()
 
         panel = ShelfWindow(contentRect: NSRect(origin: .zero, size: ShelfAnimation.expandedSize))
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = false
         let hostingView = NonFocusRingHostingView(rootView: ShelfView(
             state: animationState,
             store: clipboardStore,
@@ -40,7 +40,66 @@ final class ShelfController {
             onCollapseRequested: { [weak self] in self?.collapseImmediately() }
         ))
         hostingView.focusRingType = .none
+        hostingView.shelfController = self
+        hostingView.registerForDraggedTypes([
+            .fileURL,
+            .URL,
+            .tiff,
+            .png,
+            .string,
+            NSPasteboard.PasteboardType("public.file-url"),
+            NSPasteboard.PasteboardType("com.apple.pasteboard.promised-file-url")
+        ])
         panel.contentView = hostingView
+
+        panel.onDragEntered = { [weak self] _ in
+            self?.expandForDropZone()
+            return .copy
+        }
+        panel.onDragUpdated = { [weak self] sender in
+            StashManager.shared.isDropZoneActive = true
+            if let window = self?.panel {
+                let localX = sender.draggingLocation.x
+                if localX < window.frame.width / 2 {
+                    StashManager.shared.activeDropTarget = .stash
+                } else {
+                    StashManager.shared.activeDropTarget = .clippy
+                }
+            }
+            return .copy
+        }
+        panel.onDragExited = { [weak self] _ in
+            StashManager.shared.isDropZoneActive = false
+            StashManager.shared.activeDropTarget = .none
+            self?.scheduleCollapseAfterDragExited()
+        }
+        panel.onPerformDrag = { [weak self] sender in
+            let target = StashManager.shared.activeDropTarget
+            StashManager.shared.isDropZoneActive = false
+            StashManager.shared.activeDropTarget = .none
+
+            if target == .clippy {
+                let success = ClipboardService.shared.saveToClippy(from: sender.draggingPasteboard)
+                if success {
+                    NSSound(named: "Glass")?.play()
+                    Task { @MainActor in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            StashManager.shared.isStashViewSelected = false
+                        }
+                    }
+                    self?.expand()
+                    return true
+                }
+                return false
+            } else {
+                let count = StashManager.shared.addItems(from: sender.draggingPasteboard)
+                if count > 0 {
+                    self?.expand()
+                    return true
+                }
+                return false
+            }
+        }
 
         self.mouseTracker.onExpand = { [weak self] in self?.expand() }
         self.mouseTracker.onCollapse = { [weak self] in self?.collapse() }
@@ -187,21 +246,40 @@ final class ShelfController {
         panel.makeKeyAndOrderFront(nil)
     }
 
+    func expandForDropZone() {
+        StashManager.shared.isDropZoneActive = true
+        StashManager.shared.isStashViewSelected = true
+        expand()
+    }
+
+    func scheduleCollapseAfterDragExited() {
+        if StashManager.shared.items.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                guard let self else { return }
+                if !StashManager.shared.isDropZoneActive && StashManager.shared.items.isEmpty {
+                    self.collapseImmediately()
+                }
+            }
+        }
+    }
+
     private func collapse() {
         guard isExpanded else { return }
         isExpanded = false
         panel.canReceiveKeyFocus = false
-        panel.ignoresMouseEvents = true
+        panel.ignoresMouseEvents = false
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
     }
 }
 
-// MARK: - Hosting View without Focus Ring
+// MARK: - Hosting View without Focus Ring and Selective Hit-Testing
 
-/// An `NSHostingView` subclass that completely suppresses the AppKit focus ring
-/// to prevent macOS from drawing a light blue accent border around the panel.
+/// An `NSHostingView` subclass that suppresses the focus ring, performs selective hit testing
+/// so underlying apps receive clicks outside the notch/shelf, and accepts incoming drag-and-drop operations.
 private final class NonFocusRingHostingView<Content: View>: NSHostingView<Content> {
+    weak var shelfController: ShelfController?
+
     override var focusRingType: NSFocusRingType {
         get { .none }
         set { }
@@ -209,6 +287,95 @@ private final class NonFocusRingHostingView<Content: View>: NSHostingView<Conten
 
     override func drawFocusRingMask() {
         // Suppress drawing any focus ring mask
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard let controller = shelfController else { return super.hitTest(point) }
+        let bounds = self.bounds
+
+        if controller.isExpanded {
+            // When expanded, accept hits inside the visible shelf footprint (top-center expanded size)
+            let shelfWidth = ShelfAnimation.expandedSize.width
+            let shelfHeight = ShelfAnimation.expandedSize.height
+            let shelfRect = NSRect(
+                x: (bounds.width - shelfWidth) / 2,
+                y: bounds.height - shelfHeight,
+                width: shelfWidth,
+                height: shelfHeight
+            )
+            if shelfRect.contains(point) {
+                return super.hitTest(point)
+            }
+            return nil
+        } else {
+            // When collapsed, accept hits only inside the top notch trigger area (or collapsed pill)
+            // so dragging files to the notch hits this view, while clicks outside pass through to apps underneath
+            let triggerWidth: CGFloat = 340
+            let triggerHeight: CGFloat = 52
+            let triggerRect = NSRect(
+                x: (bounds.width - triggerWidth) / 2,
+                y: bounds.height - triggerHeight,
+                width: triggerWidth,
+                height: triggerHeight
+            )
+            if triggerRect.contains(point) {
+                return self
+            }
+            return nil
+        }
+    }
+
+    // MARK: - Dragging Destination on Hosting View
+
+    override func draggingEntered(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        guard let controller = shelfController else { return [] }
+        controller.expandForDropZone()
+        return .copy
+    }
+
+    override func draggingUpdated(_ sender: any NSDraggingInfo) -> NSDragOperation {
+        StashManager.shared.isDropZoneActive = true
+        let localPoint = convert(sender.draggingLocation, from: nil)
+        if localPoint.x < bounds.midX {
+            StashManager.shared.activeDropTarget = .stash
+        } else {
+            StashManager.shared.activeDropTarget = .clippy
+        }
+        return .copy
+    }
+
+    override func draggingExited(_ sender: (any NSDraggingInfo)?) {
+        StashManager.shared.isDropZoneActive = false
+        StashManager.shared.activeDropTarget = .none
+        shelfController?.scheduleCollapseAfterDragExited()
+    }
+
+    override func performDragOperation(_ sender: any NSDraggingInfo) -> Bool {
+        let target = StashManager.shared.activeDropTarget
+        StashManager.shared.isDropZoneActive = false
+        StashManager.shared.activeDropTarget = .none
+
+        if target == .clippy {
+            let success = ClipboardService.shared.saveToClippy(from: sender.draggingPasteboard)
+            if success {
+                NSSound(named: "Glass")?.play()
+                Task { @MainActor in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        StashManager.shared.isStashViewSelected = false
+                    }
+                }
+                shelfController?.expand()
+                return true
+            }
+            return false
+        } else {
+            let count = StashManager.shared.addItems(from: sender.draggingPasteboard)
+            if count > 0 {
+                shelfController?.expand()
+                return true
+            }
+            return false
+        }
     }
 }
 

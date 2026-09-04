@@ -12,6 +12,7 @@ struct ShelfView: View {
     var onCollapseRequested: () -> Void
 
     @ObservedObject private var queueManager = PasteQueueManager.shared
+    @ObservedObject private var stashManager = StashManager.shared
     @State private var selectedID: ClipboardItem.ID?
     @FocusState private var isFocused: Bool
 
@@ -23,13 +24,19 @@ struct ShelfView: View {
             NotchShelfShape()
                 .fill(Color.black)
                 .frame(width: state.currentSize.width, height: state.currentSize.height)
-                .opacity(state.isExpanded ? 1 : (queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) ? 1 : 0))
+                .opacity(state.isExpanded ? 1 : ((queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback)) || !stashManager.items.isEmpty ? 1 : 0))
 
-            // Collapsed Pill Indicator (if Queue is active)
-            if !state.isExpanded && queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
-                QueueCollapsedPill(queueManager: queueManager)
-                    .padding(.top, 4)
-                    .transition(.opacity)
+            // Collapsed Pill Indicator (if Queue is active or Stash has items)
+            if !state.isExpanded {
+                if queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
+                    QueueCollapsedPill(queueManager: queueManager)
+                        .padding(.top, 4)
+                        .transition(.opacity)
+                } else if !stashManager.items.isEmpty {
+                    StashCollapsedPill(stashManager: stashManager)
+                        .padding(.top, 4)
+                        .transition(.opacity)
+                }
             }
 
             // Expanded content: permanently mounted for zero layout thrashing, smoothly animated
@@ -40,6 +47,8 @@ struct ShelfView: View {
                     isFavoritesActive: store.selectedCollectionID == Collection.favorites.id,
                     isQueueActive: queueManager.isActive,
                     queueCount: queueManager.queue.count,
+                    isStashActive: stashManager.isStashViewSelected || stashManager.isDropZoneActive,
+                    stashCount: stashManager.items.count,
                     onToggleFavorites: {
                         if store.selectedCollectionID == Collection.favorites.id {
                             store.selectedCollectionID = Collection.history.id
@@ -49,6 +58,11 @@ struct ShelfView: View {
                     },
                     onToggleQueue: {
                         queueManager.toggle()
+                    },
+                    onToggleStash: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            stashManager.isStashViewSelected.toggle()
+                        }
                     },
                     onClearAll: {
                         store.clearAllHistory(preserveFavorites: false)
@@ -63,21 +77,30 @@ struct ShelfView: View {
                     }
                 )
 
-                // Queue active strip if queue mode is active
-                if queueManager.isActive {
-                    QueueActiveStrip(queueManager: queueManager)
-                }
+                if stashManager.isStashViewSelected || stashManager.isDropZoneActive {
+                    StashShelfView {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            stashManager.isStashViewSelected = false
+                        }
+                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                } else {
+                    // Queue active strip if queue mode is active
+                    if queueManager.isActive {
+                        QueueActiveStrip(queueManager: queueManager)
+                    }
 
-                // Row 2: Category chips with counts + Add button
-                CollectionTabBar(
-                    collections: store.collections,
-                    selection: $store.selectedCollectionID,
-                    store: store
-                )
+                    // Row 2: Category chips with counts + Add button
+                    CollectionTabBar(
+                        collections: store.collections,
+                        selection: $store.selectedCollectionID,
+                        store: store
+                    )
 
-                // Row 3: Horizontally scrollable clipboard cards
-                ClipboardGrid(store: store, selectedID: selectedID) { _ in
-                    onCopied()
+                    // Row 3: Horizontally scrollable clipboard cards
+                    ClipboardGrid(store: store, selectedID: selectedID) { _ in
+                        onCopied()
+                    }
                 }
             }
             .padding(.top, 14)
@@ -272,3 +295,31 @@ private struct QueueActiveStrip: View {
         )
     }
 }
+
+// MARK: - Collapsed Stash Indicator for Dynamic Island
+
+private struct StashCollapsedPill: View {
+    @ObservedObject var stashManager: StashManager
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "tray.full.fill")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.white)
+            Text("\(stashManager.items.count)")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(
+            Capsule()
+                .fill(Color.black)
+                .overlay(
+                    Capsule().stroke(Color.white.opacity(0.35), lineWidth: 1)
+                )
+        )
+        .frame(height: 24)
+    }
+}
+

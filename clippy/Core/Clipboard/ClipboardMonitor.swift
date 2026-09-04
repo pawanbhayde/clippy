@@ -54,6 +54,29 @@ final class ClipboardMonitor {
         timer = nil
     }
 
+    /// Manually ingest an item from a pasteboard (such as drag-and-drop into Clippy)
+    @discardableResult
+    func ingest(from pasteboard: NSPasteboard, sourceApp: AppSource? = AppInfoProvider.currentSource()) -> Bool {
+        // If there are multiple file URLs, ingest each one
+        if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], urls.count > 1 {
+            var anySuccess = false
+            for url in urls {
+                let singlePB = NSPasteboard(name: NSPasteboard.Name("clippy.drop.\(UUID().uuidString)"))
+                singlePB.clearContents()
+                singlePB.writeObjects([url as NSURL])
+                if let (item, payload) = ClipboardReader.read(from: singlePB) {
+                    handle(item: item, payload: payload, sourceApp: sourceApp)
+                    anySuccess = true
+                }
+            }
+            return anySuccess
+        }
+
+        guard let (item, payload) = ClipboardReader.read(from: pasteboard) else { return false }
+        handle(item: item, payload: payload, sourceApp: sourceApp)
+        return true
+    }
+
     private func pollPasteboard() {
         let currentChangeCount = NSPasteboard.general.changeCount
         guard currentChangeCount != lastChangeCount else { return }

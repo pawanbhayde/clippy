@@ -13,8 +13,8 @@ This document tracks upcoming unique and high-impact productivity features plann
 - [ ] **5. Snippet Templates with Dynamic Placeholders**
 - [x] **6. Color Inspector & Palette Converter**
 - [x] **7. Secret Auto-Masking & Auto-Purge Timer**
-- [ ] **8. Notch "Drop Zone" / Temporary Stash**
-- [ ] **9. Search Operators & App Filters**
+- [x] **8. Notch "Drop Zone" / Temporary Stash**
+- [x] **9. Search Operators & App Filters**
 
 ---
 

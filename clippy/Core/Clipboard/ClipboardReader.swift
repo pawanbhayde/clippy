@@ -27,13 +27,18 @@ enum ClipboardPayload {
 }
 
 enum ClipboardReader {
-    /// Reads the current pasteboard content, preferring file URLs, then
+    private static let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "webp", "heic", "tiff", "bmp", "ico"]
+
+    /// Reads content from the given pasteboard, preferring file URLs, then
     /// images, then rich text, then plain text. Returns `nil` if the
     /// pasteboard holds none of these representations.
-    static func readCurrent() -> (item: ClipboardItem, payload: ClipboardPayload)? {
-        let pasteboard = NSPasteboard.general
-
+    static func read(from pasteboard: NSPasteboard) -> (item: ClipboardItem, payload: ClipboardPayload)? {
         if let (payload, preview, fileSize) = readFile(pasteboard) {
+            if case .fileURL(let url) = payload, imageExtensions.contains(url.pathExtension.lowercased()),
+               let data = try? Data(contentsOf: url),
+               let _ = NSImage(data: data) {
+                return makeItem(type: .image, payload: .image(data), preview: url.lastPathComponent, fileSize: fileSize)
+            }
             return makeItem(type: .file, payload: payload, preview: preview, fileSize: fileSize)
         }
         if let (payload, preview) = readImage(pasteboard) {
@@ -46,6 +51,11 @@ enum ClipboardReader {
             return makeItem(type: .text, payload: payload, preview: preview)
         }
         return nil
+    }
+
+    /// Reads the current system general pasteboard content.
+    static func readCurrent() -> (item: ClipboardItem, payload: ClipboardPayload)? {
+        return read(from: .general)
     }
 
     private static func readFile(_ pasteboard: NSPasteboard) -> (ClipboardPayload, String, Int64?)? {
