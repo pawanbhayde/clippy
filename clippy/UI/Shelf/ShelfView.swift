@@ -24,12 +24,6 @@ struct ShelfView: View {
         ZStack(alignment: .top) {
             Color.clear
 
-            // Dynamic Island / Notch container
-            NotchShelfShape()
-                .fill(Color.black)
-                .frame(width: state.currentSize.width, height: state.currentSize.height)
-                .opacity(state.isExpanded ? 1 : ((queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback)) || !stashManager.items.isEmpty ? 1 : 0))
-
             // Collapsed Pill Indicator (if Queue is active or Stash has items)
             if !state.isExpanded {
                 if queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
@@ -43,122 +37,132 @@ struct ShelfView: View {
                 }
             }
 
-            // Expanded content: permanently mounted for zero layout thrashing, smoothly animated
-            VStack(spacing: 12) {
-                // Row 1: Search bar & utility action icons
-                SearchBar(
-                    text: $store.searchQuery,
-                    isFavoritesActive: store.selectedCollectionID == Collection.favorites.id,
-                    isQueueActive: queueManager.isActive,
-                    queueCount: queueManager.queue.count,
-                    isStashActive: stashManager.isStashViewSelected || stashManager.isDropZoneActive,
-                    stashCount: stashManager.items.count,
-                    onToggleFavorites: {
-                        if store.selectedCollectionID == Collection.favorites.id {
-                            store.selectedCollectionID = Collection.history.id
-                        } else {
-                            store.selectedCollectionID = Collection.favorites.id
-                        }
-                    },
-                    onToggleQueue: {
-                        queueManager.toggle()
-                    },
-                    onToggleStash: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            stashManager.isStashViewSelected.toggle()
-                        }
-                    },
-                    onClearAll: {
-                        store.clearAllHistory(preserveFavorites: false)
-                    },
-                    onOpenSettings: {
-                        onCollapseRequested()
-                        AppDelegate.shared?.openSettings()
-                    },
-                    onPinOrPopout: {
-                        // Collapse or toggle action
-                        onCollapseRequested()
-                    }
-                )
+            // Main Dynamic Island Shelf (Container + Contents)
+            // Opens strictly from top to bottom (sliding down from the camera notch)
+            // Closes strictly from bottom to top (sliding up into the camera notch)
+            ZStack(alignment: .top) {
+                // Pure black notch container shape
+                NotchShelfShape()
+                    .fill(Color.black)
+                    .frame(width: ShelfAnimation.expandedSize.width, height: ShelfAnimation.expandedSize.height)
+                    .shadow(color: Color.black.opacity(0.4), radius: 14, x: 0, y: 6)
 
-                if stashManager.isStashViewSelected || stashManager.isDropZoneActive {
-                    StashShelfView {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            stashManager.isStashViewSelected = false
+                // Expanded content: permanently mounted for zero layout thrashing
+                VStack(spacing: 12) {
+                    // Row 1: Search bar & utility action icons
+                    SearchBar(
+                        text: $store.searchQuery,
+                        isFavoritesActive: store.selectedCollectionID == Collection.favorites.id,
+                        isQueueActive: queueManager.isActive,
+                        queueCount: queueManager.queue.count,
+                        isStashActive: stashManager.isStashViewSelected || stashManager.isDropZoneActive,
+                        stashCount: stashManager.items.count,
+                        onToggleFavorites: {
+                            if store.selectedCollectionID == Collection.favorites.id {
+                                store.selectedCollectionID = Collection.history.id
+                            } else {
+                                store.selectedCollectionID = Collection.favorites.id
+                            }
+                        },
+                        onToggleQueue: {
+                            queueManager.toggle()
+                        },
+                        onToggleStash: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                stashManager.isStashViewSelected.toggle()
+                            }
+                        },
+                        onClearAll: {
+                            store.clearAllHistory(preserveFavorites: false)
+                        },
+                        onOpenSettings: {
+                            onCollapseRequested()
+                            AppDelegate.shared?.openSettings()
+                        },
+                        onPinOrPopout: {
+                            onCollapseRequested()
                         }
-                    }
-                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
-                } else if let diff = activeDiffResult {
-                    DiffComparisonView(diffResult: diff, onClose: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            activeDiffResult = nil
-                        }
-                    }, onCopied: {
-                        onCopied()
-                    })
-                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
-                } else {
-                    // Queue active strip if queue mode is active
-                    if queueManager.isActive {
-                        QueueActiveStrip(queueManager: queueManager)
-                    }
-
-                    // Row 2: Category chips with counts + Add button
-                    CollectionTabBar(
-                        collections: store.collections,
-                        selection: $store.selectedCollectionID,
-                        store: store
                     )
 
-                    // Row 3: Horizontally scrollable clipboard cards with floating MergerBar
-                    ZStack(alignment: .bottom) {
-                        ClipboardGrid(
-                            store: store,
-                            selectedID: selectedID,
-                            multiSelectedIDs: $multiSelectedIDs,
-                            orderedSelectedIDs: $orderedSelectedIDs
-                        ) { _ in
+                    if stashManager.isStashViewSelected || stashManager.isDropZoneActive {
+                        StashShelfView {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                stashManager.isStashViewSelected = false
+                            }
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                    } else if let diff = activeDiffResult {
+                        DiffComparisonView(diffResult: diff, onClose: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                activeDiffResult = nil
+                            }
+                        }, onCopied: {
                             onCopied()
+                        })
+                        .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                    } else {
+                        // Queue active strip if queue mode is active
+                        if queueManager.isActive {
+                            QueueActiveStrip(queueManager: queueManager)
                         }
 
-                        if multiSelectedIDs.count > 1 {
-                            MergerBar(
-                                selectedCount: multiSelectedIDs.count,
-                                onMergeBullet: { style in
-                                    mergeAndCopyBullet(style: style)
-                                },
-                                onJoinPreset: { preset, quote in
-                                    mergeAndCopyJoin(delimiter: preset.rawValue, quote: quote)
-                                },
-                                onCustomJoin: { delimiter, quote in
-                                    mergeAndCopyJoin(delimiter: delimiter, quote: quote)
-                                },
-                                onDiffCompare: {
-                                    openDiffComparison()
-                                },
-                                onSelectAll: {
-                                    selectAllVisible()
-                                },
-                                onClearSelection: {
-                                    clearMultiSelection()
-                                },
-                                onQuickCombine: {
-                                    mergeAndCopyQuick()
-                                }
-                            )
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                            .padding(.bottom, 2)
+                        // Row 2: Category chips with counts + Add button
+                        CollectionTabBar(
+                            collections: store.collections,
+                            selection: $store.selectedCollectionID,
+                            store: store
+                        )
+
+                        // Row 3: Horizontally scrollable clipboard cards with floating MergerBar
+                        ZStack(alignment: .bottom) {
+                            ClipboardGrid(
+                                store: store,
+                                selectedID: selectedID,
+                                multiSelectedIDs: $multiSelectedIDs,
+                                orderedSelectedIDs: $orderedSelectedIDs
+                            ) { _ in
+                                onCopied()
+                            }
+
+                            if multiSelectedIDs.count > 1 {
+                                MergerBar(
+                                    selectedCount: multiSelectedIDs.count,
+                                    onMergeBullet: { style in
+                                        mergeAndCopyBullet(style: style)
+                                    },
+                                    onJoinPreset: { preset, quote in
+                                        mergeAndCopyJoin(delimiter: preset.rawValue, quote: quote)
+                                    },
+                                    onCustomJoin: { delimiter, quote in
+                                        mergeAndCopyJoin(delimiter: delimiter, quote: quote)
+                                    },
+                                    onDiffCompare: {
+                                        openDiffComparison()
+                                    },
+                                    onSelectAll: {
+                                        selectAllVisible()
+                                    },
+                                    onClearSelection: {
+                                        clearMultiSelection()
+                                    },
+                                    onQuickCombine: {
+                                        mergeAndCopyQuick()
+                                    }
+                                )
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                                .padding(.bottom, 2)
+                            }
                         }
                     }
                 }
+                .padding(.top, 14)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
+                .frame(width: ShelfAnimation.expandedSize.width, alignment: .top)
+                .opacity(state.contentOpacity)
             }
-            .padding(.top, 14)
-            .padding(.horizontal, 24)
-            .padding(.bottom, 16)
-            .frame(width: ShelfAnimation.expandedSize.width, alignment: .top)
-            .opacity(state.contentOpacity)
-            .scaleEffect(state.isExpanded ? 1.0 : 0.95, anchor: .top)
-            .offset(y: state.isExpanded ? 0 : -6)
+            .frame(width: ShelfAnimation.expandedSize.width, height: ShelfAnimation.expandedSize.height, alignment: .top)
+            .offset(y: state.isExpanded ? 0 : -(ShelfAnimation.expandedSize.height + 25))
             .allowsHitTesting(state.isExpanded)
 
             // Center Floating Feedback Toast
@@ -176,10 +180,11 @@ struct ShelfView: View {
             }
         }
         .frame(
-            width: state.isExpanded ? ShelfAnimation.expandedSize.width : ShelfAnimation.collapsedSize.width,
-            height: state.isExpanded ? ShelfAnimation.expandedSize.height : ShelfAnimation.collapsedSize.height,
+            width: ShelfAnimation.expandedSize.width,
+            height: ShelfAnimation.expandedSize.height,
             alignment: .top
         )
+        .clipped()
         .focusable()
         .focusEffectDisabled()
         .focused($isFocused)

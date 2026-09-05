@@ -1,0 +1,41 @@
+# Xcode & macOS build artifacts
+build/
+DerivedData/
+*.dmg
+*.app
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Xcode user-specific files
+*.xcuserstate
+project.xcworkspace/xcuserdata/
+*.xcuserdatad/
+xcuserdata/
+
+# Swift Package Manager & CocoaPods
+.build/
+Packages/
+Pods/
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Node & Frontend (landing-page)
+node_modules/
+.next/
+out/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment & local config
+.env*.local
+.env

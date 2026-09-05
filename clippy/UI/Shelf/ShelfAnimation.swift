@@ -55,27 +55,33 @@ final class ShelfAnimationState: ObservableObject {
         isExpanded ? ShelfAnimation.expandedSize : ShelfAnimation.collapsedSize
     }
 
-    /// Organic Dynamic Island expansion: container expands smoothly from the notch
-    /// while content fades and floats gently into place.
+    /// Dynamic Island drop-down opening: slides down from the camera notch (top to bottom)
+    /// while content fades gracefully into place.
     func expand() {
         guard !isExpanded else { return }
         withAnimation(ShelfAnimation.expandSpring) {
             self.isExpanded = true
         }
-        withAnimation(.easeOut(duration: 0.20).delay(0.04)) {
+        withAnimation(.easeOut(duration: 0.22)) {
             self.contentOpacity = 1.0
         }
     }
 
-    /// Instant, fluid Dynamic Island collapse: content fades out rapidly while
-    /// the container seamlessly snaps back up into the camera notch.
+    /// Dynamic Island retraction closing: slides back up into the camera notch (bottom to top)
+    /// with zero linger.
     func collapse() {
         guard isExpanded else { return }
-        withAnimation(.easeOut(duration: 0.10)) {
+        withAnimation(.easeOut(duration: 0.22)) {
             self.contentOpacity = 0.0
         }
         withAnimation(ShelfAnimation.collapseSpring) {
             self.isExpanded = false
         }
+    }
+
+    /// Instantly marks the state as collapsed without animation delay (for direct paste execution).
+    func collapseImmediately() {
+        self.isExpanded = false
+        self.contentOpacity = 0.0
     }
 }

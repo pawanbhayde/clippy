@@ -37,7 +37,7 @@ final class ShelfController {
                     ClipboardWriter.pasteToFrontmostApp(targetApp: target)
                 }
             },
-            onCollapseRequested: { [weak self] in self?.collapseImmediately() }
+            onCollapseRequested: { [weak self] in self?.collapse() }
         ))
         hostingView.focusRingType = .none
         hostingView.shelfController = self
@@ -173,12 +173,13 @@ final class ShelfController {
         isExpanded ? collapse() : expand()
     }
 
-    /// Collapses immediately (e.g. after a card tap copies an item, or Esc),
-    /// bypassing the normal hover-based delay.
+    /// Collapses immediately (e.g. after a card tap copies an item to paste),
+    /// bypassing the animation delay so target app receives focus instantly.
     func collapseImmediately() {
         panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
-        collapse()
+        isExpanded = false
+        animationState.collapseImmediately()
         mouseTracker.forceCollapse()
         panel.updateFrame(for: ShelfAnimation.collapsedSize)
     }
@@ -267,7 +268,7 @@ final class ShelfController {
         }
     }
 
-    private func collapse() {
+    func collapse() {
         guard isExpanded else { return }
         isExpanded = false
         panel.canReceiveKeyFocus = false
