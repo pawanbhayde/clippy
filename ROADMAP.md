@@ -7,9 +7,9 @@ This document tracks upcoming unique and high-impact productivity features plann
 ## Feature Tracking Checklist
 
 - [x] **1. Sequential / Queue Paste ("Paste Queue")**
-- [ ] **2. Smart Scratchpad & Multi-Item Merger ("Combine & Paste")**
+- [x] **2. Smart Scratchpad & Multi-Item Merger ("Combine & Paste")**
 - [x] **3. Built-in Image OCR & Text Extractor**
-- [ ] **4. Instant Text Transformers ("Paste As...")**
+- [x] **4. Instant Text Transformers ("Paste As...")**
 - [ ] **5. Snippet Templates with Dynamic Placeholders**
 - [x] **6. Color Inspector & Palette Converter**
 - [x] **7. Secret Auto-Masking & Auto-Purge Timer**

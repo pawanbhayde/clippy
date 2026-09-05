@@ -14,6 +14,10 @@ struct ShelfView: View {
     @ObservedObject private var queueManager = PasteQueueManager.shared
     @ObservedObject private var stashManager = StashManager.shared
     @State private var selectedID: ClipboardItem.ID?
+    @State private var multiSelectedIDs: Set<ClipboardItem.ID> = []
+    @State private var orderedSelectedIDs: [ClipboardItem.ID] = []
+    @State private var activeDiffResult: DiffResult?
+    @State private var toastMessage: String?
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -84,6 +88,15 @@ struct ShelfView: View {
                         }
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                } else if let diff = activeDiffResult {
+                    DiffComparisonView(diffResult: diff, onClose: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            activeDiffResult = nil
+                        }
+                    }, onCopied: {
+                        onCopied()
+                    })
+                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
                 } else {
                     // Queue active strip if queue mode is active
                     if queueManager.isActive {
@@ -97,9 +110,45 @@ struct ShelfView: View {
                         store: store
                     )
 
-                    // Row 3: Horizontally scrollable clipboard cards
-                    ClipboardGrid(store: store, selectedID: selectedID) { _ in
-                        onCopied()
+                    // Row 3: Horizontally scrollable clipboard cards with floating MergerBar
+                    ZStack(alignment: .bottom) {
+                        ClipboardGrid(
+                            store: store,
+                            selectedID: selectedID,
+                            multiSelectedIDs: $multiSelectedIDs,
+                            orderedSelectedIDs: $orderedSelectedIDs
+                        ) { _ in
+                            onCopied()
+                        }
+
+                        if multiSelectedIDs.count > 1 {
+                            MergerBar(
+                                selectedCount: multiSelectedIDs.count,
+                                onMergeBullet: { style in
+                                    mergeAndCopyBullet(style: style)
+                                },
+                                onJoinPreset: { preset, quote in
+                                    mergeAndCopyJoin(delimiter: preset.rawValue, quote: quote)
+                                },
+                                onCustomJoin: { delimiter, quote in
+                                    mergeAndCopyJoin(delimiter: delimiter, quote: quote)
+                                },
+                                onDiffCompare: {
+                                    openDiffComparison()
+                                },
+                                onSelectAll: {
+                                    selectAllVisible()
+                                },
+                                onClearSelection: {
+                                    clearMultiSelection()
+                                },
+                                onQuickCombine: {
+                                    mergeAndCopyQuick()
+                                }
+                            )
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .padding(.bottom, 2)
+                        }
                     }
                 }
             }
@@ -111,8 +160,26 @@ struct ShelfView: View {
             .scaleEffect(state.isExpanded ? 1.0 : 0.95, anchor: .top)
             .offset(y: state.isExpanded ? 0 : -6)
             .allowsHitTesting(state.isExpanded)
+
+            // Center Floating Feedback Toast
+            if let toast = toastMessage {
+                Text(toast)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(Color.black.opacity(0.88)))
+                    .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                    .shadow(color: Color.black.opacity(0.5), radius: 8, x: 0, y: 3)
+                    .transition(.scale.combined(with: .opacity))
+                    .padding(.top, 42)
+            }
         }
-        .frame(width: ShelfAnimation.expandedSize.width, height: ShelfAnimation.expandedSize.height, alignment: .top)
+        .frame(
+            width: state.isExpanded ? ShelfAnimation.expandedSize.width : ShelfAnimation.collapsedSize.width,
+            height: state.isExpanded ? ShelfAnimation.expandedSize.height : ShelfAnimation.collapsedSize.height,
+            alignment: .top
+        )
         .focusable()
         .focusEffectDisabled()
         .focused($isFocused)
@@ -121,7 +188,27 @@ struct ShelfView: View {
         .onKeyPress(.upArrow) { move(delta: -1); return .handled }
         .onKeyPress(.downArrow) { move(delta: 1); return .handled }
         .onKeyPress(.return) { activateSelection(); return .handled }
-        .onKeyPress(.escape) { onCollapseRequested(); return .handled }
+        .onKeyPress(.escape) {
+            if activeDiffResult != nil {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    activeDiffResult = nil
+                }
+                return .handled
+            }
+            if !multiSelectedIDs.isEmpty {
+                clearMultiSelection()
+                return .handled
+            }
+            onCollapseRequested()
+            return .handled
+        }
+        .onKeyPress(characters: ["a", "A"]) { press in
+            if press.modifiers.contains(.command) {
+                selectAllVisible()
+                return .handled
+            }
+            return .ignored
+        }
         .onKeyPress(characters: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) { press in
             guard press.modifiers.contains(.command), let digit = Int(String(press.characters)) else {
                 return .ignored
@@ -129,8 +216,16 @@ struct ShelfView: View {
             selectCollection(tabIndex: digit - 1)
             return .handled
         }
-        .onChange(of: store.selectedCollectionID) { _, _ in resetSelectionToFirstVisible() }
-        .onChange(of: store.searchQuery) { _, _ in resetSelectionToFirstVisible() }
+        .onChange(of: store.selectedCollectionID) { _, _ in
+            clearMultiSelection()
+            activeDiffResult = nil
+            resetSelectionToFirstVisible()
+        }
+        .onChange(of: store.searchQuery) { _, _ in
+            clearMultiSelection()
+            activeDiffResult = nil
+            resetSelectionToFirstVisible()
+        }
         .onChange(of: state.isExpanded) { _, expanded in
             guard expanded else { return }
             isFocused = true
@@ -171,6 +266,94 @@ struct ShelfView: View {
         let items = store.visibleItems
         if let selectedID, items.contains(where: { $0.id == selectedID }) { return }
         selectedID = items.first?.id
+    }
+
+    // MARK: - Multi-Item Merger Actions
+
+    private func getOrderedSelectedItems() -> [ClipboardItem] {
+        var result: [ClipboardItem] = []
+        for id in orderedSelectedIDs {
+            if let item = store.items.first(where: { $0.id == id }) {
+                result.append(item)
+            }
+        }
+        if result.isEmpty {
+            result = store.visibleItems.filter { multiSelectedIDs.contains($0.id) }
+        }
+        return result
+    }
+
+    private func mergeAndCopyBullet(style: BulletStyle) {
+        let items = getOrderedSelectedItems()
+        guard !items.isEmpty else { return }
+        let merged = MergerEngine.mergeAsBulletList(items: items, style: style)
+        ClipboardWriter.writeText(merged)
+        showToast("Merged \(items.count) items as \(style.displayName) & Copied!")
+        clearMultiSelection()
+        onCopied()
+    }
+
+    private func mergeAndCopyJoin(delimiter: String, quote: QuoteOption) {
+        let items = getOrderedSelectedItems()
+        guard !items.isEmpty else { return }
+        let joined = MergerEngine.joinWithDelimiter(items: items, delimiter: delimiter, quote: quote)
+        ClipboardWriter.writeText(joined)
+        showToast("Joined \(items.count) items & Copied!")
+        clearMultiSelection()
+        onCopied()
+    }
+
+    private func mergeAndCopyQuick() {
+        let items = getOrderedSelectedItems()
+        guard !items.isEmpty else { return }
+        let joined = MergerEngine.joinWithDelimiter(items: items, delimiter: "\n", quote: .none)
+        ClipboardWriter.writeText(joined)
+        showToast("Combined \(items.count) items & Copied!")
+        clearMultiSelection()
+        onCopied()
+    }
+
+    private func openDiffComparison() {
+        let items = getOrderedSelectedItems()
+        guard items.count == 2 else { return }
+        let itemA = items[0]
+        let itemB = items[1]
+        let oldItem = itemA.createdAt <= itemB.createdAt ? itemA : itemB
+        let newItem = itemA.createdAt <= itemB.createdAt ? itemB : itemA
+
+        let diff = DiffEngine.compare(oldItem: oldItem, newItem: newItem)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            activeDiffResult = diff
+        }
+    }
+
+    private func selectAllVisible() {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            for item in store.visibleItems {
+                multiSelectedIDs.insert(item.id)
+                if !orderedSelectedIDs.contains(item.id) {
+                    orderedSelectedIDs.append(item.id)
+                }
+            }
+        }
+    }
+
+    private func clearMultiSelection() {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            multiSelectedIDs.removeAll()
+            orderedSelectedIDs.removeAll()
+        }
+    }
+
+    private func showToast(_ message: String) {
+        withAnimation(.easeInOut(duration: 0.15)) {
+            toastMessage = message
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                toastMessage = nil
+            }
+        }
     }
 }
 

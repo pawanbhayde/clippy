@@ -9,10 +9,18 @@ struct ClipboardCard: View {
     /// Highlights this card as the keyboard-navigation target — set by the
     /// shelf's arrow-key handling in `ShelfView`.
     var isSelected: Bool = false
+    /// Whether this card is part of a multi-item selection for merging
+    var isMultiSelected: Bool = false
+    /// Whether multi-selection mode is currently active (e.g. 1+ items selected)
+    var isMultiSelectActive: Bool = false
     /// Called when the user activates this card, either by tapping it or
     /// via keyboard Enter — the caller is responsible for writing the item
     /// to the pasteboard (see `ClipboardStore.activate`).
     var onActivate: ((ClipboardItem) -> Void)?
+    /// Called when the user toggles selection of this card for multi-item actions.
+    var onToggleSelect: ((ClipboardItem) -> Void)?
+    /// Called when the user shift-clicks this card for range selection.
+    var onRangeSelect: ((ClipboardItem) -> Void)?
     /// Called when the user starts dragging this card — updates clipboard and history.
     var onDragStarted: ((ClipboardItem) -> Void)?
     /// Called when the user toggles the favorite status of this card.
@@ -22,6 +30,8 @@ struct ClipboardCard: View {
 
     @State private var isRevealed: Bool = false
     @State private var revealedContent: String?
+    @State private var showingPasteAsPopover: Bool = false
+    @State private var isMenuTracking: Bool = false
     @ObservedObject private var devPrefs = DeveloperPreferences.shared
     @ObservedObject private var privacyPrefs = PrivacyPreferences.shared
     @State private var toastMessage: String?
@@ -41,7 +51,28 @@ struct ClipboardCard: View {
         .background(cardBackground)
         .contentShape(RoundedRectangle(cornerRadius: 18))
         .onTapGesture {
-            onActivate?(item)
+            let flags = NSEvent.modifierFlags
+            if flags.contains(.option) {
+                showingPasteAsPopover = true
+            } else if flags.contains(.command) {
+                onToggleSelect?(item)
+            } else if flags.contains(.shift) {
+                onRangeSelect?(item)
+            } else if isMultiSelectActive {
+                onToggleSelect?(item)
+            } else {
+                onActivate?(item)
+            }
+        }
+        .popover(isPresented: $showingPasteAsPopover, arrowEdge: .bottom) {
+            if let text = resolvedItemText {
+                PasteAsPopoverView(text: text) { transformed, label in
+                    showingPasteAsPopover = false
+                    applyTransformation(transformed, label: label)
+                } onClose: {
+                    showingPasteAsPopover = false
+                }
+            }
         }
         .onDrag {
             onDragStarted?(item)
@@ -50,9 +81,31 @@ struct ClipboardCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 18))
         .overlay(
             RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(isSelected ? Color.white : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                .strokeBorder(
+                    isMultiSelected ? Color.blue.opacity(0.85) : (isSelected ? Color.white : Color.white.opacity(0.08)),
+                    lineWidth: (isMultiSelected || isSelected) ? 2 : 1
+                )
                 .allowsHitTesting(false)
         )
+        .overlay(alignment: .topLeading) {
+            // Multi-selection checkmark indicator
+            if isMultiSelected || isMultiSelectActive || isHovered {
+                Button {
+                    onToggleSelect?(item)
+                } label: {
+                    Image(systemName: isMultiSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(isMultiSelected ? Color.white : Color.white.opacity(0.75))
+                        .background(
+                            Circle().fill(isMultiSelected ? Color.blue : Color.black.opacity(0.55))
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(7)
+                .help(isMultiSelected ? "Deselect item" : "Select item for merge (⌘-click)")
+                .transition(.opacity.combined(with: .scale))
+            }
+        }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 5) {
                 // OCR "Copy Text" Button (extract text directly from screenshot/image)
@@ -122,6 +175,24 @@ struct ClipboardCard: View {
                     }
                 }
 
+                // Instant Text Transformers ("Paste As...") Wand Button
+                if let text = resolvedItemText, !text.isEmpty {
+                    Menu {
+                        pasteAsMenuItems(for: text)
+                    } label: {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(5)
+                            .background(Color(white: 0.22), in: Circle())
+                    }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 22, height: 22)
+                    .opacity((isHovered || isMenuTracking) ? 1 : 0)
+                    .allowsHitTesting(isHovered || isMenuTracking)
+                    .help("Paste As... (Instant Text Transformers • ⌥-click)")
+                }
+
                 // Queue Button (add/remove from sequential paste queue)
                 if isHovered || PasteQueueManager.shared.isActive {
                     let isQueued = PasteQueueManager.shared.queue.contains(where: { $0.id == item.id })
@@ -180,8 +251,16 @@ struct ClipboardCard: View {
                     .allowsHitTesting(false)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSMenu.didBeginTrackingNotification)) { _ in
+            isMenuTracking = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSMenu.didEndTrackingNotification)) { _ in
+            isMenuTracking = false
+        }
         .onHover { hovering in
-            isHovered = hovering
+            if !isMenuTracking {
+                isHovered = hovering
+            }
         }
         .contextMenu {
             Button {
@@ -189,6 +268,14 @@ struct ClipboardCard: View {
                 showCopiedToast(item.isFavorite ? "Removed from Favorites" : "Marked as Favorite")
             } label: {
                 Label(item.isFavorite ? "Remove from Favorites" : "Mark as Favorite", systemImage: item.isFavorite ? "star.slash" : "star.fill")
+            }
+
+            if let text = resolvedItemText, !text.isEmpty {
+                Menu {
+                    pasteAsMenuItems(for: text)
+                } label: {
+                    Label("Paste As...", systemImage: "wand.and.stars")
+                }
             }
 
             if item.type == .image, let ocrText = item.extractedText, !ocrText.isEmpty {
@@ -671,6 +758,157 @@ struct ClipboardCard: View {
         }
     }
 
+    // MARK: - Instant Text Transformers ("Paste As...")
+
+    @ViewBuilder
+    private func pasteAsMenuItems(for text: String) -> some View {
+        Menu {
+            Button {
+                applyTransformation(TextTransformations.cleanAll(text), label: "Clean Plain Text")
+            } label: {
+                Label("Clean All (HTML, Tracking, Format)", systemImage: "sparkles")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.stripTrackingParameters(text), label: "Clean URL Tracking")
+            } label: {
+                Label("Strip Tracking Params (?utm_...)", systemImage: "link.badge.plus")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.stripHTMLTags(text), label: "HTML Stripped")
+            } label: {
+                Label("Strip HTML Tags", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.stripFormatting(text), label: "Trimmed Whitespace")
+            } label: {
+                Label("Trim & Normalize Whitespace", systemImage: "text.alignleft")
+            }
+        } label: {
+            Label("Clean Plain Text", systemImage: "text.badge.checkmark")
+        }
+
+        Menu {
+            Button {
+                applyTransformation(TextTransformations.toCamelCase(text), label: "camelCase")
+            } label: {
+                Text("camelCase")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.toSnakeCase(text), label: "snake_case")
+            } label: {
+                Text("snake_case")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.toKebabCase(text), label: "kebab-case")
+            } label: {
+                Text("kebab-case")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.toPascalCase(text), label: "PascalCase")
+            } label: {
+                Text("PascalCase")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.toConstantCase(text), label: "CONSTANT_CASE")
+            } label: {
+                Text("CONSTANT_CASE")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.toTitleCase(text), label: "Title Case")
+            } label: {
+                Text("Title Case")
+            }
+        } label: {
+            Label("Case Conversion", systemImage: "textformat")
+        }
+
+        Menu {
+            Button {
+                applyTransformation(TextTransformations.base64Encode(text), label: "Base64 Encoded")
+            } label: {
+                Label("Base64 Encode", systemImage: "lock")
+            }
+
+            if let decoded = TextTransformations.base64Decode(text) {
+                Button {
+                    applyTransformation(decoded, label: "Base64 Decoded")
+                } label: {
+                    Label("Base64 Decode", systemImage: "lock.open")
+                }
+            }
+
+            Button {
+                applyTransformation(TextTransformations.urlEncode(text), label: "URL Encoded")
+            } label: {
+                Label("URL Encode", systemImage: "link")
+            }
+
+            if let decodedURL = TextTransformations.urlDecode(text) {
+                Button {
+                    applyTransformation(decodedURL, label: "URL Decoded")
+                } label: {
+                    Label("URL Decode", systemImage: "link.badge.plus")
+                }
+            }
+
+            Button {
+                applyTransformation(TextTransformations.htmlEntitiesEncode(text), label: "HTML Entities Encoded")
+            } label: {
+                Label("HTML Entities Encode (&amp;)", systemImage: "character")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.htmlEntitiesDecode(text), label: "HTML Entities Decoded")
+            } label: {
+                Label("HTML Entities Decode", systemImage: "character.cursor.ibeam")
+            }
+        } label: {
+            Label("Developer Encodings", systemImage: "binary")
+        }
+
+        Menu {
+            Button {
+                applyTransformation(TextTransformations.escapeForSwift(text), label: "Swift Escaped")
+            } label: {
+                Label("Swift String (\\\")", systemImage: "swift")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.escapeForJavaScript(text), label: "JavaScript Escaped")
+            } label: {
+                Label("JavaScript String (\\', \\\")", systemImage: "curlybraces")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.escapeForPython(text), label: "Python Escaped")
+            } label: {
+                Label("Python String (\\\")", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
+
+            Button {
+                applyTransformation(TextTransformations.escapeForJSON(text), label: "JSON Escaped")
+            } label: {
+                Label("JSON String Escaped", systemImage: "doc.text")
+            }
+        } label: {
+            Label("String Escaping", systemImage: "quote.opening")
+        }
+    }
+
+    private func applyTransformation(_ transformed: String, label: String) {
+        ClipboardWriter.writeText(transformed)
+        showCopiedToast("Copied as \(label)")
+        onActivate?(item)
+    }
+
     private func showCopiedToast(_ message: String) {
         toastMessage = message
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -678,6 +916,189 @@ struct ClipboardCard: View {
                 toastMessage = nil
             }
         }
+    }
+}
+
+// MARK: - Paste As Popover View (Option-Click)
+
+private struct PasteAsPopoverView: View {
+    let text: String
+    let onTransform: (String, String) -> Void
+    let onClose: () -> Void
+
+    enum SectionTab: String, CaseIterable, Identifiable {
+        case clean = "Clean"
+        case casing = "Case"
+        case encoding = "Encode"
+        case escape = "Escape"
+
+        var id: String { rawValue }
+        var icon: String {
+            switch self {
+            case .clean: return "sparkles"
+            case .casing: return "textformat"
+            case .encoding: return "binary"
+            case .escape: return "quote.opening"
+            }
+        }
+    }
+
+    @State private var activeTab: SectionTab = .clean
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Header
+            HStack {
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.yellow)
+                Text("Paste As...")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+
+                Spacer()
+
+                Button {
+                    onClose()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color.white.opacity(0.6))
+                        .padding(4)
+                        .background(Circle().fill(Color.white.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Segmented Tab Picker
+            Picker("", selection: $activeTab) {
+                ForEach(SectionTab.allCases) { tab in
+                    Label(tab.rawValue, systemImage: tab.icon).tag(tab)
+                }
+            }
+            .pickerStyle(.segmented)
+
+            // Content per tab
+            VStack(alignment: .leading, spacing: 5) {
+                switch activeTab {
+                case .clean:
+                    actionButton(label: "Clean All (HTML, Tracking, Format)", icon: "sparkles") {
+                        onTransform(TextTransformations.cleanAll(text), "Clean Plain Text")
+                    }
+                    actionButton(label: "Strip Tracking Params (?utm_...)", icon: "link.badge.plus") {
+                        onTransform(TextTransformations.stripTrackingParameters(text), "Clean URL Tracking")
+                    }
+                    actionButton(label: "Strip HTML Tags", icon: "chevron.left.forwardslash.chevron.right") {
+                        onTransform(TextTransformations.stripHTMLTags(text), "HTML Stripped")
+                    }
+                    actionButton(label: "Trim & Normalize Whitespace", icon: "text.alignleft") {
+                        onTransform(TextTransformations.stripFormatting(text), "Trimmed Whitespace")
+                    }
+
+                case .casing:
+                    HStack(spacing: 6) {
+                        miniButton("camelCase") {
+                            onTransform(TextTransformations.toCamelCase(text), "camelCase")
+                        }
+                        miniButton("snake_case") {
+                            onTransform(TextTransformations.toSnakeCase(text), "snake_case")
+                        }
+                    }
+                    HStack(spacing: 6) {
+                        miniButton("kebab-case") {
+                            onTransform(TextTransformations.toKebabCase(text), "kebab-case")
+                        }
+                        miniButton("PascalCase") {
+                            onTransform(TextTransformations.toPascalCase(text), "PascalCase")
+                        }
+                    }
+                    HStack(spacing: 6) {
+                        miniButton("CONSTANT_CASE") {
+                            onTransform(TextTransformations.toConstantCase(text), "CONSTANT_CASE")
+                        }
+                        miniButton("Title Case") {
+                            onTransform(TextTransformations.toTitleCase(text), "Title Case")
+                        }
+                    }
+
+                case .encoding:
+                    actionButton(label: "Base64 Encode", icon: "lock") {
+                        onTransform(TextTransformations.base64Encode(text), "Base64 Encoded")
+                    }
+                    if let dec = TextTransformations.base64Decode(text) {
+                        actionButton(label: "Base64 Decode", icon: "lock.open") {
+                            onTransform(dec, "Base64 Decoded")
+                        }
+                    }
+                    actionButton(label: "URL Encode", icon: "link") {
+                        onTransform(TextTransformations.urlEncode(text), "URL Encoded")
+                    }
+                    if let decURL = TextTransformations.urlDecode(text) {
+                        actionButton(label: "URL Decode", icon: "link.badge.plus") {
+                            onTransform(decURL, "URL Decoded")
+                        }
+                    }
+                    actionButton(label: "HTML Entities Encode (&amp;)", icon: "character") {
+                        onTransform(TextTransformations.htmlEntitiesEncode(text), "HTML Entities Encoded")
+                    }
+                    actionButton(label: "HTML Entities Decode", icon: "character.cursor.ibeam") {
+                        onTransform(TextTransformations.htmlEntitiesDecode(text), "HTML Entities Decoded")
+                    }
+
+                case .escape:
+                    actionButton(label: "Swift String (\\\")", icon: "swift") {
+                        onTransform(TextTransformations.escapeForSwift(text), "Swift Escaped")
+                    }
+                    actionButton(label: "JavaScript String (\\', \\\")", icon: "curlybraces") {
+                        onTransform(TextTransformations.escapeForJavaScript(text), "JavaScript Escaped")
+                    }
+                    actionButton(label: "Python String (\\\")", icon: "chevron.left.forwardslash.chevron.right") {
+                        onTransform(TextTransformations.escapeForPython(text), "Python Escaped")
+                    }
+                    actionButton(label: "JSON String Escaped", icon: "doc.text") {
+                        onTransform(TextTransformations.escapeForJSON(text), "JSON Escaped")
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .frame(width: 280)
+        .background(Color(white: 0.12))
+    }
+
+    private func actionButton(label: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.white.opacity(0.8))
+                    .frame(width: 14)
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func miniButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+        } label: {
+            Text(title)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 6))
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -23,8 +23,8 @@ final class ShelfController {
         self.mouseTracker = mouseTracker ?? MouseTracker()
         self.globalShortcut = globalShortcut ?? GlobalShortcut()
 
-        panel = ShelfWindow(contentRect: NSRect(origin: .zero, size: ShelfAnimation.expandedSize))
-        panel.ignoresMouseEvents = false
+        panel = ShelfWindow(contentRect: NSRect(origin: .zero, size: ShelfAnimation.collapsedSize))
+        panel.ignoresMouseEvents = true
         let hostingView = NonFocusRingHostingView(rootView: ShelfView(
             state: animationState,
             store: clipboardStore,
@@ -137,7 +137,8 @@ final class ShelfController {
     /// Anchors the panel top-center on the active screen, shows the
     /// collapsed capsule, and starts mouse tracking and the global hotkey.
     func start() {
-        panel.positionAtTopCenter()
+        panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        panel.ignoresMouseEvents = true
         panel.orderFrontRegardless()
         mouseTracker.start()
         globalShortcut.start()
@@ -176,8 +177,10 @@ final class ShelfController {
     /// bypassing the normal hover-based delay.
     func collapseImmediately() {
         panel.canReceiveKeyFocus = false
+        panel.ignoresMouseEvents = true
         collapse()
         mouseTracker.forceCollapse()
+        panel.updateFrame(for: ShelfAnimation.collapsedSize)
     }
 
     /// Opens the expanded clipboard shelf.
@@ -235,6 +238,7 @@ final class ShelfController {
         }
         isExpanded = true
         panel.canReceiveKeyFocus = true
+        panel.updateFrame(for: ShelfAnimation.expandedSize)
         panel.ignoresMouseEvents = false
         animationState.expand()
         // Once expanded, hovering anywhere over the shelf's footprint
@@ -267,9 +271,14 @@ final class ShelfController {
         guard isExpanded else { return }
         isExpanded = false
         panel.canReceiveKeyFocus = false
-        panel.ignoresMouseEvents = false
+        panel.ignoresMouseEvents = true
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { [weak self] in
+            guard let self, !self.isExpanded else { return }
+            self.panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        }
     }
 }
 
@@ -290,39 +299,8 @@ private final class NonFocusRingHostingView<Content: View>: NSHostingView<Conten
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard let controller = shelfController else { return super.hitTest(point) }
-        let bounds = self.bounds
-
-        if controller.isExpanded {
-            // When expanded, accept hits inside the visible shelf footprint (top-center expanded size)
-            let shelfWidth = ShelfAnimation.expandedSize.width
-            let shelfHeight = ShelfAnimation.expandedSize.height
-            let shelfRect = NSRect(
-                x: (bounds.width - shelfWidth) / 2,
-                y: bounds.height - shelfHeight,
-                width: shelfWidth,
-                height: shelfHeight
-            )
-            if shelfRect.contains(point) {
-                return super.hitTest(point)
-            }
-            return nil
-        } else {
-            // When collapsed, accept hits only inside the top notch trigger area (or collapsed pill)
-            // so dragging files to the notch hits this view, while clicks outside pass through to apps underneath
-            let triggerWidth: CGFloat = 340
-            let triggerHeight: CGFloat = 52
-            let triggerRect = NSRect(
-                x: (bounds.width - triggerWidth) / 2,
-                y: bounds.height - triggerHeight,
-                width: triggerWidth,
-                height: triggerHeight
-            )
-            if triggerRect.contains(point) {
-                return self
-            }
-            return nil
-        }
+        guard let controller = shelfController, controller.isExpanded else { return nil }
+        return super.hitTest(point)
     }
 
     // MARK: - Dragging Destination on Hosting View

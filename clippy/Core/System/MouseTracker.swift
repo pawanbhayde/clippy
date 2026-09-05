@@ -121,7 +121,7 @@ final class CGEventMouseMonitor: MouseTrackingService {
 /// it's open. Expands on either; collapses ~300ms after leaving both.
 final class MouseTracker {
     private static let defaultTriggerSize = NSSize(width: 320, height: 48)
-    private static let collapseDelay: TimeInterval = 0.12
+    private static let collapseDelay: TimeInterval = 0.25
 
     /// Called when the mouse enters the trigger region (or the shelf,
     /// while already expanded) and the shelf should expand.
@@ -136,6 +136,9 @@ final class MouseTracker {
     private var shelfFrame: NSRect?
     private var isExpanded = false
     private var collapseTimer: Timer?
+    private var isMenuTracking = false
+    private var menuBeginObserver: Any?
+    private var menuEndObserver: Any?
 
     init(trackingService: MouseTrackingService = GlobalMouseMonitor(), triggerSize: NSSize = MouseTracker.defaultTriggerSize) {
         self.trackingService = trackingService
@@ -143,6 +146,34 @@ final class MouseTracker {
         trackingService.onMouseMoved = { [weak self] location in
             self?.handleMouseMoved(location)
         }
+
+        menuBeginObserver = NotificationCenter.default.addObserver(
+            forName: NSMenu.didBeginTrackingNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isMenuTracking = true
+            self?.collapseTimer?.invalidate()
+            self?.collapseTimer = nil
+        }
+
+        menuEndObserver = NotificationCenter.default.addObserver(
+            forName: NSMenu.didEndTrackingNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.isMenuTracking = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                guard let self, !self.isMenuTracking else { return }
+                self.handleMouseMoved(NSEvent.mouseLocation)
+            }
+        }
+    }
+
+    deinit {
+        stop()
+        if let menuBeginObserver { NotificationCenter.default.removeObserver(menuBeginObserver) }
+        if let menuEndObserver { NotificationCenter.default.removeObserver(menuEndObserver) }
     }
 
     /// Recomputes the trigger region for the active screen and starts
@@ -186,6 +217,13 @@ final class MouseTracker {
     }
 
     private func handleMouseMoved(_ location: NSPoint) {
+        // While any NSMenu or submenu is tracking, NEVER collapse the shelf
+        guard !isMenuTracking else {
+            collapseTimer?.invalidate()
+            collapseTimer = nil
+            return
+        }
+
         let currentTrigger = Self.triggerRegion(size: triggerSize)
         let isInsideTrigger = currentTrigger.contains(location)
         let isInsideShelf = shelfFrame?.contains(location) ?? false
@@ -211,10 +249,12 @@ final class MouseTracker {
     }
 
     private func scheduleCollapseIfNeeded() {
+        guard !isMenuTracking else { return }
         guard NSEvent.pressedMouseButtons == 0 else { return }
         guard isExpanded, collapseTimer == nil else { return }
         collapseTimer = Timer.scheduledTimer(withTimeInterval: Self.collapseDelay, repeats: false) { [weak self] _ in
             guard let self else { return }
+            guard !self.isMenuTracking else { return }
             // Re-verify that the user has not started dragging or pressed down
             guard NSEvent.pressedMouseButtons == 0 else {
                 self.collapseTimer = nil
