@@ -130,6 +130,17 @@ final class MouseTracker {
     /// the shelf's frame.
     var onCollapse: (() -> Void)?
 
+    /// When paused (e.g. while Screenshot HUD is active), MouseTracker ignores hover events
+    /// and will not auto-expand or auto-collapse.
+    var isPaused: Bool = false {
+        didSet {
+            if isPaused {
+                collapseTimer?.invalidate()
+                collapseTimer = nil
+            }
+        }
+    }
+
     private let trackingService: MouseTrackingService
     private let triggerSize: NSSize
     private var triggerRegion: NSRect = .zero
@@ -217,6 +228,9 @@ final class MouseTracker {
     }
 
     private func handleMouseMoved(_ location: NSPoint) {
+        // While paused (e.g. Screenshot HUD active), do not respond to hover movements
+        guard !isPaused else { return }
+
         // While any NSMenu or submenu is tracking, NEVER collapse the shelf
         guard !isMenuTracking else {
             collapseTimer?.invalidate()

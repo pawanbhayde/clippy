@@ -13,11 +13,14 @@ final class ShelfController {
     private let panel: ShelfWindow
     private let mouseTracker: MouseTracker
     private let globalShortcut: GlobalShortcut
-    private let animationState = ShelfAnimationState()
+    let animationState = ShelfAnimationState()
     private let clipboardStore = ClipboardStore()
     private var previousApp: NSRunningApplication?
     private var workspaceObserver: Any?
     private var dropObserver: Any?
+    private var clickOutsideGlobalMonitor: Any?
+    private var clickOutsideLocalMonitor: Any?
+    private var screenshotKeyMonitor: Any?
 
     init(mouseTracker: MouseTracker? = nil, globalShortcut: GlobalShortcut? = nil) {
         self.mouseTracker = mouseTracker ?? MouseTracker()
@@ -37,7 +40,10 @@ final class ShelfController {
                     ClipboardWriter.pasteToFrontmostApp(targetApp: target)
                 }
             },
-            onCollapseRequested: { [weak self] in self?.collapse() }
+            onCollapseRequested: { [weak self] in self?.collapse() },
+            onStartScreenshot: { [weak self] in self?.startScreenshotFlow() },
+            onCaptureScreenshot: { [weak self] mode in self?.executeScreenshotCapture(mode: mode) },
+            onCancelScreenshot: { [weak self] in self?.cancelScreenshotHUD() }
         ))
         hostingView.focusRingType = .none
         hostingView.shelfController = self
@@ -159,6 +165,15 @@ final class ShelfController {
     }
 
     deinit {
+        if let clickOutsideGlobalMonitor {
+            NSEvent.removeMonitor(clickOutsideGlobalMonitor)
+        }
+        if let clickOutsideLocalMonitor {
+            NSEvent.removeMonitor(clickOutsideLocalMonitor)
+        }
+        if let screenshotKeyMonitor {
+            NSEvent.removeMonitor(screenshotKeyMonitor)
+        }
         if let workspaceObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
         }
@@ -170,12 +185,19 @@ final class ShelfController {
     /// Opens/closes the shelf independent of mouse hover — the global-hotkey
     /// path (⌘⇧V by default).
     func toggle() {
+        if animationState.isScreenshotHUDActive {
+            cancelScreenshotHUD()
+            return
+        }
         isExpanded ? collapse() : expand()
     }
 
     /// Collapses immediately (e.g. after a card tap copies an item to paste),
     /// bypassing the animation delay so target app receives focus instantly.
     func collapseImmediately() {
+        if animationState.isScreenshotHUDActive {
+            cancelScreenshotHUD()
+        }
         panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
         isExpanded = false
@@ -268,7 +290,139 @@ final class ShelfController {
         }
     }
 
+    // MARK: - Screenshot Capture Flow
+
+    private func startScreenshotEventMonitoring() {
+        stopScreenshotEventMonitoring()
+
+        // Dismiss HUD if user clicks outside the notch pill anywhere on the screen
+        clickOutsideGlobalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let self, self.animationState.isScreenshotHUDActive else { return }
+            let mouseLoc = NSEvent.mouseLocation
+            if !self.panel.frame.contains(mouseLoc) {
+                self.cancelScreenshotHUD()
+            }
+        }
+
+        // Local clicks in our own app outside the panel frame
+        clickOutsideLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self, self.animationState.isScreenshotHUDActive else { return event }
+            let mouseLoc = NSEvent.mouseLocation
+            if !self.panel.frame.contains(mouseLoc) {
+                self.cancelScreenshotHUD()
+            }
+            return event
+        }
+
+        // Keyboard shortcuts while screenshot HUD is displayed: Esc cancels; 1/A (Area), 2/W (Window), 3/S (Screen)
+        screenshotKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.animationState.isScreenshotHUDActive else { return event }
+
+            if event.keyCode == 53 { // Escape
+                self.cancelScreenshotHUD()
+                return nil
+            }
+
+            guard let chars = event.characters?.lowercased() else { return event }
+            if chars == "1" || chars == "a" {
+                self.executeScreenshotCapture(mode: .area)
+                return nil
+            } else if chars == "2" || chars == "w" {
+                self.executeScreenshotCapture(mode: .window)
+                return nil
+            } else if chars == "3" || chars == "s" {
+                self.executeScreenshotCapture(mode: .screen)
+                return nil
+            }
+            return event
+        }
+    }
+
+    private func stopScreenshotEventMonitoring() {
+        if let clickOutsideGlobalMonitor {
+            NSEvent.removeMonitor(clickOutsideGlobalMonitor)
+            self.clickOutsideGlobalMonitor = nil
+        }
+        if let clickOutsideLocalMonitor {
+            NSEvent.removeMonitor(clickOutsideLocalMonitor)
+            self.clickOutsideLocalMonitor = nil
+        }
+        if let screenshotKeyMonitor {
+            NSEvent.removeMonitor(screenshotKeyMonitor)
+            self.screenshotKeyMonitor = nil
+        }
+    }
+
+    func startScreenshotFlow() {
+        guard !animationState.isScreenshotHUDActive else { return }
+
+        // 1. Immediately pause mouseTracker so hover does not auto-collapse or interfere
+        mouseTracker.isPaused = true
+        mouseTracker.forceCollapse()
+
+        // 2. Collapse the big shelf
+        isExpanded = false
+        panel.canReceiveKeyFocus = false
+        panel.ignoresMouseEvents = true
+        animationState.collapse()
+        mouseTracker.updateShelfFrame(nil)
+
+        // 3. After the big shelf retracts, present the compact Screenshot HUD at the camera notch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) { [weak self] in
+            guard let self, !self.isExpanded else { return }
+            self.animationState.isScreenshotHUDActive = true
+            self.panel.updateFrame(for: ShelfAnimation.screenshotHUDSize)
+            self.panel.canReceiveKeyFocus = true
+            self.panel.ignoresMouseEvents = false
+            self.panel.makeKeyAndOrderFront(nil)
+            self.startScreenshotEventMonitoring()
+        }
+    }
+
+    func cancelScreenshotHUD() {
+        stopScreenshotEventMonitoring()
+        guard animationState.isScreenshotHUDActive else { return }
+        animationState.isScreenshotHUDActive = false
+        panel.canReceiveKeyFocus = false
+        panel.ignoresMouseEvents = true
+        panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        mouseTracker.updateShelfFrame(nil)
+
+        // Unpause mouseTracker after a brief buffer so the cursor's current position doesn't immediately expand
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.mouseTracker.isPaused = false
+        }
+    }
+
+    func executeScreenshotCapture(mode: ScreenshotManager.CaptureMode) {
+        stopScreenshotEventMonitoring()
+        // Hide the HUD completely before capture begins so Clippy UI isn't captured in the screenshot
+        animationState.isScreenshotHUDActive = false
+        panel.canReceiveKeyFocus = false
+        panel.ignoresMouseEvents = true
+        panel.orderOut(nil)
+        panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        mouseTracker.updateShelfFrame(nil)
+
+        // Small delay to ensure Quartz compositor clears the window
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
+            ScreenshotManager.shared.capture(mode: mode) { [weak self] didCapture in
+                guard let self else { return }
+                self.panel.orderFrontRegardless()
+                self.mouseTracker.isPaused = false
+                if didCapture {
+                    // Re-open shelf so user sees the newly captured screenshot in Clippy!
+                    self.expand()
+                }
+            }
+        }
+    }
+
     func collapse() {
+        if animationState.isScreenshotHUDActive {
+            cancelScreenshotHUD()
+            return
+        }
         guard isExpanded else { return }
         isExpanded = false
         panel.canReceiveKeyFocus = false
@@ -300,7 +454,7 @@ private final class NonFocusRingHostingView<Content: View>: NSHostingView<Conten
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard let controller = shelfController, controller.isExpanded else { return nil }
+        guard let controller = shelfController, (controller.isExpanded || controller.animationState.isScreenshotHUDActive) else { return nil }
         return super.hitTest(point)
     }
 

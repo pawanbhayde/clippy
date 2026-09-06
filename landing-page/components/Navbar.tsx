@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname();
   return (
     <>
       <div
@@ -16,9 +20,9 @@ export default function Navbar() {
             href="/"
           >
             <svg
-              width="1731"
-              height="400"
-              viewBox="0 0 1731 400"
+              width="1491"
+              height="494"
+              viewBox="0 0 1491 494"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               className="-mt-0.5 h-6 w-auto md:h-7 [&_path]:transition-all"
@@ -26,83 +30,75 @@ export default function Navbar() {
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
-                d="M57.9607 61.0995C100.422 -31.69 238.652 -5.91438 321.947 53.2892C449.492 141.709 447.474 321.35 443 380.576C442.15 391.83 432.665 400 421.379 400H32.2985C19.1525 400 7.79095 390.527 5.815 377.53C-18.0693 220.434 36.8052 190.28 76.3952 160.095C58.0076 130.763 43.2515 108.764 57.9607 61.0995Z"
-                fill="#34D399"
-              ></path>
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M57.9607 61.0995C100.422 -31.69 238.652 -5.91438 321.947 53.2892C449.492 141.709 447.474 321.35 443 380.576C442.15 391.83 432.665 400 421.379 400H32.2985C19.1525 400 7.79095 390.527 5.815 377.53C-18.0693 220.434 36.8052 190.28 76.3952 160.095C58.0076 130.763 43.2515 108.764 57.9607 61.0995Z"
-                fill="url(#paint0_radial_5261_41)"
-              ></path>
-              <path
-                d="M216.504 132.597C188.289 132.597 180.073 164.751 180.072 204.417C180.072 244.084 188.289 276.243 216.504 276.243C244.718 276.241 252.932 244.083 252.932 204.417C252.931 164.752 244.718 132.599 216.504 132.597Z"
-                fill="white"
-              ></path>
-              <path
-                d="M332.42 132.597C304.205 132.597 295.987 164.751 295.987 204.417C295.987 244.084 304.204 276.243 332.42 276.243C360.636 276.243 368.852 244.084 368.852 204.417C368.852 164.751 360.635 132.597 332.42 132.597Z"
-                fill="white"
-              ></path>
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M1446.06 104.338C1469.76 104.338 1490.94 109.991 1509.52 121.361C1528.05 132.552 1542.44 148.065 1552.65 167.837L1553.13 168.766C1563.18 188.314 1568.17 210.213 1568.17 234.401C1568.17 238.704 1567.93 244.156 1567.46 250.737L1567.27 253.431H1376.19C1377.72 262.425 1380.59 270.721 1384.77 278.338L1385.4 279.442C1391.94 290.761 1400.78 299.588 1411.94 305.97C1423.63 312.408 1436.77 315.652 1451.43 315.652C1466.12 315.652 1478.43 312.474 1488.48 306.267C1498.74 299.867 1506.64 291.018 1512.17 279.649L1513.35 277.216L1561.04 296.45L1559.7 299.238C1549.96 319.521 1535.64 335.529 1516.77 347.202L1516.77 347.204C1498.01 358.748 1475.96 364.465 1450.73 364.465C1425.97 364.465 1403.58 358.904 1383.63 347.732L1383.62 347.726L1383.6 347.719C1363.83 336.395 1348.26 320.746 1336.94 300.818L1336.94 300.811L1336.93 300.803C1325.76 280.861 1320.2 258.706 1320.2 234.401C1320.2 209.8 1325.68 187.567 1336.69 167.773C1347.69 148.011 1362.7 132.513 1381.7 121.335C1400.88 109.99 1422.36 104.338 1446.06 104.338ZM1446.06 153.15C1432.36 153.15 1420.11 156.454 1409.22 163.019C1398.48 169.585 1390.04 178.681 1383.89 190.376C1381.48 195.069 1379.55 200.05 1378.11 205.319H1510.61C1509.55 197.269 1507 189.858 1502.94 183.059L1502.93 183.051L1502.93 183.042C1497.44 173.699 1489.81 166.436 1479.99 161.228L1479.98 161.22L1479.96 161.212C1470.16 155.863 1458.88 153.15 1446.06 153.15Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M1671.93 111.377H1730.6V156.216H1671.93V278.347C1671.93 290.627 1674.59 299.031 1679.33 304.185C1684.19 309.305 1691.93 312.146 1703.16 312.146C1710.96 312.146 1718.94 310.946 1727.11 308.526L1730.84 307.422V358.054L1728.84 358.71C1717.21 362.534 1705.92 364.465 1694.98 364.465C1679.29 364.465 1665.53 361.181 1653.8 354.501L1653.78 354.486C1642.04 347.639 1633.08 337.848 1626.92 325.199C1620.76 312.567 1617.74 297.699 1617.74 280.685V156.216H1577.07V111.377H1617.74V57.9198H1671.93V111.377Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M703.621 44.4653C725.973 44.4654 746.604 48.3404 765.477 56.1294C784.631 63.6195 801.119 74.7121 814.909 89.4011C828.741 104.135 838.926 122.142 845.499 143.354L846.356 146.121L794.291 162.33L793.341 159.737C785.874 139.346 774.581 123.387 759.513 111.73C744.528 100.138 726.39 94.288 704.942 94.2879C685.147 94.2879 667.452 98.7292 651.787 107.556C636.428 116.377 624.181 128.892 615.036 145.175C606.218 161.396 601.751 180.705 601.751 203.201C601.752 225.701 606.074 245.171 614.615 261.7C623.47 277.975 635.575 290.638 650.949 299.75C666.303 308.557 683.835 312.994 703.621 312.994C723.27 312.994 741.489 307.31 758.34 295.885C775.482 284.169 788.031 268.766 796.03 249.624L796.975 247.365L850.01 259.643L849.001 262.666C841.826 284.191 830.74 302.491 815.725 317.506L815.704 317.527C800.757 332.175 783.558 343.391 764.127 351.164L764.109 351.171L764.091 351.178C744.681 358.643 724.518 362.377 703.621 362.377C681.845 362.377 661.227 358.497 641.794 350.724L641.786 350.721L641.78 350.718C622.663 342.952 605.769 332.04 591.12 317.988L591.109 317.978L591.098 317.968C576.44 303.609 564.929 286.71 556.567 267.299L556.56 267.282L556.552 267.264C548.467 247.799 544.444 226.433 544.444 203.201C544.444 179.971 548.467 158.744 556.559 139.564L556.563 139.553L556.567 139.544C564.931 120.128 576.448 103.366 591.12 89.2935C605.766 74.9511 622.66 63.8913 641.78 56.1237L641.786 56.1209L641.794 56.1181C661.227 48.3449 681.845 44.4653 703.621 44.4653Z"
+                d="M10 209.64Q10 163.40 30.01 127.16Q50.02 90.92 85.81 70.69Q121.60 50.46 166.96 50.46Q222.53 50.46 262.11 79.81Q301.68 109.15 315.02 159.84L231.43 159.84Q222.09 140.28 204.97 130.05Q187.85 119.82 166.07 119.82Q130.94 119.82 109.15 144.28Q87.37 168.73 87.37 209.64Q87.37 250.55 109.15 275Q130.94 299.46 166.07 299.46Q187.85 299.46 204.97 289.23Q222.09 279 231.43 259.44L315.02 259.44Q301.68 310.13 262.11 339.25Q222.53 368.37 166.96 368.37Q121.60 368.37 85.81 348.14Q50.02 327.91 30.01 291.90Q10 255.88 10 209.64"
                 fill="currentColor"
               ></path>
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
-                d="M987.004 107.856C1007.45 107.856 1025.48 112.973 1040.97 123.288L1041.69 123.762C1053.21 131.376 1062.34 141.218 1069.06 153.245V111.377H1125.49V359.295H1069.06V316.572C1062.2 328.894 1052.85 339.024 1041 346.922C1025.5 357.252 1007.47 362.376 987.004 362.377C965.38 362.377 945.642 357.114 927.856 346.563L927.831 346.548L927.806 346.533C910.342 335.693 896.359 320.792 885.861 301.897L885.848 301.873L885.835 301.848C875.598 282.58 870.529 260.234 870.529 234.896C870.529 209.56 875.598 187.352 885.844 168.367L885.848 168.36L885.852 168.353C896.35 149.156 910.343 134.237 927.838 123.68L927.856 123.669C945.642 113.118 965.38 107.856 987.004 107.856ZM998.449 157.238C986.64 157.238 975.233 160.183 964.195 166.121L963.202 166.681C952.998 172.555 944.595 181.079 938.002 192.341L937.994 192.354L937.986 192.368C931.281 203.544 927.835 217.666 927.835 234.896C927.835 251.804 931.269 266.097 938.002 277.892C944.806 289.516 953.541 298.221 964.191 304.108C975.23 310.048 986.638 312.994 998.449 312.994C1010.57 312.994 1021.98 310.039 1032.7 304.111C1043.36 298.224 1052.09 289.518 1058.9 277.892C1065.63 266.096 1069.06 251.804 1069.06 234.896C1069.06 217.666 1065.62 203.545 1058.91 192.368L1058.9 192.354L1058.9 192.341C1052.09 180.715 1043.36 172.008 1032.7 166.121C1021.98 160.193 1010.57 157.238 998.449 157.238Z"
+                d="M361.70 37.12L437.74 37.12L437.74 366.15L361.70 366.15"
                 fill="currentColor"
               ></path>
               <path
-                d="M1286.75 104.338C1295.53 104.338 1304.08 105.966 1312.36 109.213L1314.2 109.935V162.857L1310.42 161.664C1301.81 158.946 1293.15 157.591 1284.42 157.591C1271.67 157.591 1260.97 160.734 1252.18 166.885L1252.18 166.891C1243.54 172.89 1236.77 181.888 1231.95 194.093L1231.94 194.104C1227.13 206.137 1224.67 220.866 1224.67 238.375V359.295H1170.71V111.377H1224.67V142.425C1230.95 131.716 1238.85 122.994 1248.39 116.316L1248.4 116.31L1248.41 116.305C1259.95 108.336 1272.76 104.338 1286.75 104.338Z"
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M531.11 92.26Q511.10 92.26 498.43 80.47Q485.76 68.69 485.76 51.35Q485.76 33.57 498.43 21.78Q511.10 10 531.11 10Q550.67 10 563.34 21.78Q576.02 33.57 576.02 51.35Q576.02 68.69 563.34 80.47Q550.67 92.26 531.11 92.26M492.87 118.05L568.90 118.05L568.90 366.15L492.87 366.15"
                 fill="currentColor"
               ></path>
-              <defs>
-                <radialGradient
-                  id="paint0_radial_5261_41"
-                  cx="0"
-                  cy="0"
-                  r="1"
-                  gradientTransform="matrix(-362.42 0 -0.406802 -262.298 265.985 400.42)"
-                  gradientUnits="userSpaceOnUse"
-                >
-                  <stop stopColor="#BEF264"></stop>
-                  <stop offset="1" stopColor="#BEF264" stopOpacity="0"></stop>
-                </radialGradient>
-              </defs>
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M700.07 153.17Q711.18 135.83 730.75 125.16Q750.31 114.49 776.55 114.49Q807.23 114.49 832.12 130.05Q857.02 145.61 871.47 174.51Q885.93 203.41 885.93 241.65Q885.93 279.89 871.47 309.02Q857.02 338.14 832.12 353.92Q807.23 369.71 776.55 369.71Q750.76 369.71 730.97 359.04Q711.18 348.37 700.07 331.47L700.07 484.42L624.04 484.42L624.04 118.05L700.07 118.05L700.07 153.17M808.56 241.65Q808.56 213.20 792.77 196.97Q776.99 180.74 753.87 180.74Q731.19 180.74 715.41 197.19Q699.62 213.64 699.62 242.10Q699.62 270.55 715.41 287.01Q731.19 303.46 753.87 303.46Q776.55 303.46 792.55 286.78Q808.56 270.11 808.56 241.65"
+                fill="currentColor"
+              ></path>
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M1001.97 153.17Q1013.09 135.83 1032.65 125.16Q1052.22 114.49 1078.45 114.49Q1109.13 114.49 1134.03 130.05Q1158.93 145.61 1173.38 174.51Q1187.83 203.41 1187.83 241.65Q1187.83 279.89 1173.38 309.02Q1158.93 338.14 1134.03 353.92Q1109.13 369.71 1078.45 369.71Q1052.66 369.71 1032.88 359.04Q1013.09 348.37 1001.97 331.47L1001.97 484.42L925.94 484.42L925.94 118.05L1001.97 118.05L1001.97 153.17M1110.46 241.65Q1110.46 213.20 1094.68 196.97Q1078.90 180.74 1055.77 180.74Q1033.10 180.74 1017.31 197.19Q1001.53 213.64 1001.53 242.10Q1001.53 270.55 1017.31 287.01Q1033.10 303.46 1055.77 303.46Q1078.45 303.46 1094.46 286.78Q1110.46 270.11 1110.46 241.65"
+                fill="currentColor"
+              ></path>
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M1399.03 118.05L1481.29 118.05L1325.67 483.98L1243.85 483.98L1300.77 357.70L1199.84 118.05L1284.76 118.05L1342.12 273.22"
+                fill="currentColor"
+              ></path>
             </svg>
           </Link>
           <div className="flex grow gap-1 max-md:hidden md:px-7">
             <Link
               data-slot="button"
-              className="focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-primary/5 hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-4 py-2 has-[>svg]:px-3 text-app-secondary-invert rounded-full text-primary!"
+              className={`focus-visible:border-ring focus-visible:ring-ring/50 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 rounded-full ${
+                pathname === "/"
+                  ? "bg-white/10 text-white font-semibold"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
               href="/"
-            >Overview</Link
             >
-            <a
+              Home
+            </Link>
+            <Link
               data-slot="button"
-              className="focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-primary/5 hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-4 py-2 has-[>svg]:px-3 text-app-secondary-invert rounded-full"
-              type="button"
-              href="#features"
-            >Features</a
+              className={`focus-visible:border-ring focus-visible:ring-ring/50 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 rounded-full ${
+                pathname === "/pricing"
+                  ? "bg-white/10 text-white font-semibold"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+              href="/pricing"
             >
-            <a
+              Pricing
+            </Link>
+            <Link
               data-slot="button"
-              className="focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 hover:bg-primary/5 hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-4 py-2 has-[>svg]:px-3 text-app-secondary-invert rounded-full"
-              type="button"
-              href="#shortcuts"
-            >Shortcuts</a
+              className={`focus-visible:border-ring focus-visible:ring-ring/50 inline-flex shrink-0 items-center justify-center gap-2 border border-transparent text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 rounded-full ${
+                pathname === "/changelog"
+                  ? "bg-white/10 text-white font-semibold"
+                  : "text-zinc-400 hover:text-white hover:bg-white/5"
+              }`}
+              href="/changelog"
             >
+              Changelog
+            </Link>
           </div>
           <div className="flex items-center justify-end gap-1">
             <button

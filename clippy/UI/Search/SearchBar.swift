@@ -12,6 +12,7 @@ struct SearchBar: View {
     var onToggleFavorites: (() -> Void)? = nil
     var onToggleQueue: (() -> Void)? = nil
     var onToggleStash: (() -> Void)? = nil
+    var onStartScreenshot: (() -> Void)? = nil
     var onClearAll: (() -> Void)? = nil
     var onOpenSettings: (() -> Void)? = nil
     var onPinOrPopout: (() -> Void)? = nil
@@ -147,7 +148,22 @@ struct SearchBar: View {
                 .buttonStyle(.plain)
                 .help(isStashActive ? "Return to Clipboard History" : (stashCount > 0 ? "Temporary Stash (\(stashCount) items)" : "Open Notch Drop Zone / Stash"))
 
-                // 4. Clear All History
+                // 4. Screenshot Capture Tool
+                Button {
+                    onStartScreenshot?()
+                } label: {
+                    Image(systemName: "camera.viewfinder")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color(white: 0.75))
+                        .frame(width: 30, height: 30)
+                        .background(
+                            Circle().fill(Color(white: 0.16))
+                        )
+                }
+                .buttonStyle(.plain)
+                .help("Capture Screenshot (Area, Window, Full Screen)")
+
+                // 5. Clear All History
                 Button {
                     onClearAll?()
                 } label: {

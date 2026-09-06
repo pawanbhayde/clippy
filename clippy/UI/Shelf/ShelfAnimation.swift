@@ -17,6 +17,8 @@ enum ShelfAnimation {
 
     /// Size of the resting collapsed notch capsule.
     static let collapsedSize = CGSize(width: 140, height: 28)
+    /// Size of the screenshot options mini notch HUD.
+    static let screenshotHUDSize = CGSize(width: 340, height: 42)
     /// Size of the fully expanded shelf matching the widescreen custom notch dock.
     static let expandedSize = CGSize(width: 880, height: 290)
 }
@@ -46,6 +48,7 @@ enum ShelfPhase: Equatable {
 final class ShelfAnimationState: ObservableObject {
     @Published private(set) var isExpanded: Bool = false
     @Published private(set) var contentOpacity: Double = 0
+    @Published var isScreenshotHUDActive: Bool = false
 
     var phase: ShelfPhase {
         isExpanded ? .expanded : .collapsed
@@ -83,5 +86,6 @@ final class ShelfAnimationState: ObservableObject {
     func collapseImmediately() {
         self.isExpanded = false
         self.contentOpacity = 0.0
+        self.isScreenshotHUDActive = false
     }
 }

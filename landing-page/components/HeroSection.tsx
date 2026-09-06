@@ -59,7 +59,7 @@ export default function HeroSection() {
         </div>
       </div>
       <div
-        className="relative h-96 overflow-hidden bg-[url(/images/wallpaper-hero.webp)] bg-cover *:select-none md:rounded-xs"
+        className="relative h-96 max-w-7xl mx-auto overflow-hidden bg-[url(/images/wallpaper-hero.webp)] bg-cover *:select-none md:rounded-xs"
       >
         <div
           className="font-sans-alt absolute top-0 left-0 flex h-9 w-full items-center px-2 text-sm font-medium text-black"

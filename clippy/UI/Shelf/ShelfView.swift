@@ -10,6 +10,9 @@ struct ShelfView: View {
     @ObservedObject var store: ClipboardStore
     var onCopied: () -> Void
     var onCollapseRequested: () -> Void
+    var onStartScreenshot: (() -> Void)? = nil
+    var onCaptureScreenshot: ((ScreenshotManager.CaptureMode) -> Void)? = nil
+    var onCancelScreenshot: (() -> Void)? = nil
 
     @ObservedObject private var queueManager = PasteQueueManager.shared
     @ObservedObject private var stashManager = StashManager.shared
@@ -24,9 +27,20 @@ struct ShelfView: View {
         ZStack(alignment: .top) {
             Color.clear
 
-            // Collapsed Pill Indicator (if Queue is active or Stash has items)
+            // Collapsed Pill Indicator (if Screenshot HUD, Queue, or Stash active)
             if !state.isExpanded {
-                if queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
+                if state.isScreenshotHUDActive {
+                    ScreenshotHUDView(
+                        onSelectMode: { mode in
+                            onCaptureScreenshot?(mode)
+                        },
+                        onCancel: {
+                            onCancelScreenshot?()
+                        }
+                    )
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                } else if queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
                     QueueCollapsedPill(queueManager: queueManager)
                         .padding(.top, 4)
                         .transition(.opacity)
@@ -72,6 +86,7 @@ struct ShelfView: View {
                                 stashManager.isStashViewSelected.toggle()
                             }
                         },
+                        onStartScreenshot: onStartScreenshot,
                         onClearAll: {
                             store.clearAllHistory(preserveFavorites: false)
                         },
@@ -180,8 +195,8 @@ struct ShelfView: View {
             }
         }
         .frame(
-            width: ShelfAnimation.expandedSize.width,
-            height: ShelfAnimation.expandedSize.height,
+            width: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.width : ShelfAnimation.expandedSize.width,
+            height: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.height : ShelfAnimation.expandedSize.height,
             alignment: .top
         )
         .clipped()
@@ -194,6 +209,10 @@ struct ShelfView: View {
         .onKeyPress(.downArrow) { move(delta: 1); return .handled }
         .onKeyPress(.return) { activateSelection(); return .handled }
         .onKeyPress(.escape) {
+            if state.isScreenshotHUDActive {
+                onCancelScreenshot?()
+                return .handled
+            }
             if activeDiffResult != nil {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     activeDiffResult = nil
@@ -207,15 +226,46 @@ struct ShelfView: View {
             onCollapseRequested()
             return .handled
         }
-        .onKeyPress(characters: ["a", "A"]) { press in
-            if press.modifiers.contains(.command) {
+        .onKeyPress(characters: ["a", "A", "w", "W", "s", "S", "1", "2", "3"]) { press in
+            if state.isScreenshotHUDActive {
+                switch press.characters.lowercased() {
+                case "a", "1":
+                    onCaptureScreenshot?(.area)
+                    return .handled
+                case "w", "2":
+                    onCaptureScreenshot?(.window)
+                    return .handled
+                case "s", "3":
+                    onCaptureScreenshot?(.screen)
+                    return .handled
+                default:
+                    break
+                }
+            }
+            if press.characters.lowercased() == "a" && press.modifiers.contains(.command) {
                 selectAllVisible()
                 return .handled
             }
             return .ignored
         }
         .onKeyPress(characters: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]) { press in
-            guard press.modifiers.contains(.command), let digit = Int(String(press.characters)) else {
+            guard let digit = Int(String(press.characters)) else { return .ignored }
+            if state.isScreenshotHUDActive {
+                switch digit {
+                case 1:
+                    onCaptureScreenshot?(.area)
+                    return .handled
+                case 2:
+                    onCaptureScreenshot?(.window)
+                    return .handled
+                case 3:
+                    onCaptureScreenshot?(.screen)
+                    return .handled
+                default:
+                    break
+                }
+            }
+            guard press.modifiers.contains(.command) else {
                 return .ignored
             }
             selectCollection(tabIndex: digit - 1)
@@ -235,6 +285,10 @@ struct ShelfView: View {
             guard expanded else { return }
             isFocused = true
             if selectedID == nil { resetSelectionToFirstVisible() }
+        }
+        .onChange(of: state.isScreenshotHUDActive) { _, active in
+            guard active else { return }
+            isFocused = true
         }
     }
 

@@ -77,7 +77,7 @@ final class ShelfWindow: NSPanel, NSDraggingDestination {
 
     /// Updates the panel's size and re-centers it at top-center of active screen.
     func updateFrame(for size: NSSize, animated: Bool = false) {
-        let origin = ScreenManager.topCenterPosition(panelSize: size)
+        let origin = ScreenManager.topCenterPosition(for: screen, panelSize: size)
         let targetFrame = NSRect(origin: origin, size: size)
         setFrame(targetFrame, display: true, animate: animated)
     }
