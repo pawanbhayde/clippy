@@ -14,6 +14,7 @@ struct ShelfView: View {
     var onStartScreenshot: (() -> Void)? = nil
     var onCaptureScreenshot: ((ScreenshotManager.CaptureMode) -> Void)? = nil
     var onCancelScreenshot: (() -> Void)? = nil
+    var onOpenWritingToolsPanel: ((ClipboardItem) -> Void)? = nil
 
     @ObservedObject private var queueManager = PasteQueueManager.shared
     @ObservedObject private var stashManager = StashManager.shared
@@ -141,10 +142,15 @@ struct ShelfView: View {
                                 store: store,
                                 selectedID: selectedID,
                                 multiSelectedIDs: $multiSelectedIDs,
-                                orderedSelectedIDs: $orderedSelectedIDs
-                            ) { _ in
-                                onCopied()
-                            }
+                                orderedSelectedIDs: $orderedSelectedIDs,
+                                onCopied: { _ in
+                                    onCopied()
+                                },
+                                onOpenWritingTools: { item in
+                                    selectedID = item.id
+                                    onOpenWritingToolsPanel?(item)
+                                }
+                            )
 
                             if multiSelectedIDs.count > 1 {
                                 MergerBar(

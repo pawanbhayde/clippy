@@ -23,6 +23,7 @@ final class ShelfController {
     private var clickOutsideGlobalMonitor: Any?
     private var clickOutsideLocalMonitor: Any?
     private var screenshotKeyMonitor: Any?
+    private var writingToolsPanelController: WritingToolsPanelController?
 
     init(mouseTracker: MouseTracker? = nil, globalShortcut: GlobalShortcut? = nil) {
         self.mouseTracker = mouseTracker ?? MouseTracker()
@@ -46,7 +47,8 @@ final class ShelfController {
             onExpandRequested: { [weak self] in self?.expand() },
             onStartScreenshot: { [weak self] in self?.startScreenshotFlow() },
             onCaptureScreenshot: { [weak self] mode in self?.executeScreenshotCapture(mode: mode) },
-            onCancelScreenshot: { [weak self] in self?.cancelScreenshotHUD() }
+            onCancelScreenshot: { [weak self] in self?.cancelScreenshotHUD() },
+            onOpenWritingToolsPanel: { [weak self] item in self?.openWritingToolsPanel(for: item) }
         ))
         hostingView.focusRingType = .none
         hostingView.shelfController = self
@@ -217,6 +219,11 @@ final class ShelfController {
             cancelScreenshotHUD()
             return
         }
+        if writingToolsPanelController?.isOpen == true {
+            closeWritingToolsPanel()
+            collapse()
+            return
+        }
         isExpanded ? collapse() : expand()
     }
 
@@ -224,6 +231,7 @@ final class ShelfController {
     /// bypassing the animation delay so target app receives focus instantly.
     func collapseImmediately() {
         dismissCopyNotificationImmediately()
+        closeWritingToolsPanel()
         if animationState.isScreenshotHUDActive {
             cancelScreenshotHUD()
         }
@@ -454,16 +462,73 @@ final class ShelfController {
             cancelScreenshotHUD()
             return
         }
+        closeWritingToolsPanel(andCollapseShelf: false)
         guard isExpanded else { return }
         isExpanded = false
         panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
         animationState.collapse()
         mouseTracker.updateShelfFrame(nil)
+        mouseTracker.forceCollapse()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { [weak self] in
             guard let self, !self.isExpanded else { return }
             self.panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        }
+    }
+
+    // MARK: - Apple Intelligence Writing Tools Floating Panel
+
+    func openWritingToolsPanel(for item: ClipboardItem) {
+        if !isExpanded {
+            expand()
+        }
+
+        // Pause mouse tracking so hover does not auto-collapse while interacting with Writing Tools
+        mouseTracker.isPaused = true
+
+        if writingToolsPanelController == nil {
+            writingToolsPanelController = WritingToolsPanelController()
+        }
+
+        writingToolsPanelController?.show(
+            for: item,
+            shelfFrame: panel.frame,
+            onSaved: { refinedText in
+                let pb = NSPasteboard.general
+                pb.clearContents()
+                pb.setString(refinedText, forType: .string)
+                ClipboardService.shared.saveToClippy(from: pb)
+            },
+            onPasteToApp: { [weak self] refinedText in
+                guard let self else { return }
+                let pb = NSPasteboard.general
+                pb.clearContents()
+                pb.setString(refinedText, forType: .string)
+                ClipboardService.shared.saveToClippy(from: pb)
+                let target = self.previousApp
+                self.closeWritingToolsPanel(andCollapseShelf: false)
+                self.collapseImmediately()
+                let isDirectPasteEnabled = UserDefaults.standard.object(forKey: "isDirectPasteEnabled") as? Bool ?? true
+                if isDirectPasteEnabled {
+                    ClipboardWriter.pasteToFrontmostApp(targetApp: target)
+                }
+            },
+            onClose: { [weak self] in
+                self?.closeWritingToolsPanel(andCollapseShelf: true)
+            }
+        )
+    }
+
+    func closeWritingToolsPanel(andCollapseShelf: Bool = false) {
+        mouseTracker.isPaused = false
+        if let controller = writingToolsPanelController, controller.isOpen {
+            controller.close()
+        }
+        if andCollapseShelf {
+            collapse()
+        } else {
+            mouseTracker.updateShelfFrame(panel.frame)
         }
     }
 

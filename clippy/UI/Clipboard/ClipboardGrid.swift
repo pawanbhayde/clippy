@@ -16,19 +16,23 @@ struct ClipboardGrid: View {
     /// Called after a card writes its item back to the pasteboard, after
     /// this grid has already recorded the usage on `store`.
     var onCopied: ((ClipboardItem) -> Void)?
+    /// Called when the user opens Apple Writing Tools from a card's context menu.
+    var onOpenWritingTools: ((ClipboardItem) -> Void)?
 
     init(
         store: ClipboardStore,
         selectedID: ClipboardItem.ID? = nil,
         multiSelectedIDs: Binding<Set<ClipboardItem.ID>> = .constant([]),
         orderedSelectedIDs: Binding<[ClipboardItem.ID]> = .constant([]),
-        onCopied: ((ClipboardItem) -> Void)? = nil
+        onCopied: ((ClipboardItem) -> Void)? = nil,
+        onOpenWritingTools: ((ClipboardItem) -> Void)? = nil
     ) {
         self.store = store
         self.selectedID = selectedID
         self._multiSelectedIDs = multiSelectedIDs
         self._orderedSelectedIDs = orderedSelectedIDs
         self.onCopied = onCopied
+        self.onOpenWritingTools = onOpenWritingTools
     }
 
     var body: some View {
@@ -60,6 +64,9 @@ struct ClipboardGrid: View {
                                     },
                                     onToggleFavorite: { favoritedItem in
                                         store.toggleFavorite(favoritedItem)
+                                    },
+                                    onOpenWritingTools: { writingToolsItem in
+                                        onOpenWritingTools?(writingToolsItem)
                                     },
                                     onDelete: { deletedItem in
                                         store.deleteItem(deletedItem)

@@ -25,6 +25,8 @@ struct ClipboardCard: View {
     var onDragStarted: ((ClipboardItem) -> Void)?
     /// Called when the user toggles the favorite status of this card.
     var onToggleFavorite: ((ClipboardItem) -> Void)?
+    /// Called when the user requests Apple Writing Tools for this card.
+    var onOpenWritingTools: ((ClipboardItem) -> Void)?
     /// Called when the user requests immediate deletion/purging of this card.
     var onDelete: ((ClipboardItem) -> Void)?
 
@@ -95,73 +97,6 @@ struct ClipboardCard: View {
         }
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 5) {
-                // OCR "Copy Text" Button (extract text directly from screenshot/image)
-                if item.type == .image, let ocrText = item.extractedText, !ocrText.isEmpty, isHovered {
-                    Button {
-                        ClipboardWriter.writeText(ocrText)
-                        showCopiedToast("Copied Text")
-                    } label: {
-                        HStack(spacing: 3) {
-                            Image(systemName: "text.viewfinder")
-                                .font(.system(size: 10, weight: .bold))
-                            Text("Copy Text")
-                                .font(.system(size: 9, weight: .bold))
-                        }
-                        .foregroundStyle(Color.black)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.white))
-                    }
-                    .buttonStyle(.plain)
-                    .help("Copy extracted text from image (Vision OCR)")
-                }
-
-                // Color Quick-Copy Action Menu (Hex, RGB, HSL, Swift, NSColor, Compose)
-                if let color = detectedColor, isHovered {
-                    Menu {
-                        colorMenuItems(for: color)
-                    } label: {
-                        HStack(spacing: 3) {
-                            ColorSwatchView(color: color, size: CGSize(width: 10, height: 10), cornerRadius: 2)
-                            Image(systemName: "paintpalette.fill")
-                                .font(.system(size: 9, weight: .bold))
-                        }
-                        .foregroundStyle(Color.white)
-                        .padding(5)
-                        .background(Color(white: 0.22), in: Capsule())
-                    }
-                    .menuStyle(.borderlessButton)
-                    .help("Convert & copy color formats")
-                }
-
-                if devPrefs.isDeveloperModeEnabled, let text = resolvedItemText {
-                    if isConnectionString {
-                        Menu {
-                            connectionStringMenuItems(for: text)
-                        } label: {
-                            Image(systemName: "cable.connector")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(5)
-                                .background(Color(white: 0.22), in: Circle())
-                        }
-                        .menuStyle(.borderlessButton)
-                        .frame(width: 22, height: 22)
-                    } else if isJSON {
-                        Menu {
-                            jsonMenuItems(for: text)
-                        } label: {
-                            Image(systemName: "curlybraces")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(5)
-                                .background(Color(white: 0.22), in: Circle())
-                        }
-                        .menuStyle(.borderlessButton)
-                        .frame(width: 22, height: 22)
-                    }
-                }
-
                 // Queue Button (add/remove from sequential paste queue)
                 if isHovered || PasteQueueManager.shared.isActive {
                     let isQueued = PasteQueueManager.shared.queue.contains(where: { $0.id == item.id })
@@ -232,11 +167,34 @@ struct ClipboardCard: View {
             }
         }
         .contextMenu {
+            let isQueued = PasteQueueManager.shared.queue.contains(where: { $0.id == item.id })
+            Button {
+                if isQueued {
+                    if let idx = PasteQueueManager.shared.queue.firstIndex(where: { $0.id == item.id }) {
+                        PasteQueueManager.shared.remove(at: idx)
+                        showCopiedToast("Removed from Queue")
+                    }
+                } else {
+                    PasteQueueManager.shared.enqueue(item)
+                    showCopiedToast("Added to Queue")
+                }
+            } label: {
+                Label(isQueued ? "Remove from Queue" : "Add to Sequential Queue", systemImage: isQueued ? "minus.circle" : "plus.circle")
+            }
+
             Button {
                 onToggleFavorite?(item)
                 showCopiedToast(item.isFavorite ? "Removed from Favorites" : "Marked as Favorite")
             } label: {
                 Label(item.isFavorite ? "Remove from Favorites" : "Mark as Favorite", systemImage: item.isFavorite ? "star.slash" : "star.fill")
+            }
+
+            if item.type == .text || item.type == .code || item.type == .url || item.type == .richText {
+                Button {
+                    onOpenWritingTools?(item)
+                } label: {
+                    Label("Apple Writing Tools...", systemImage: "wand.and.sparkles")
+                }
             }
 
             if item.type == .image, let ocrText = item.extractedText, !ocrText.isEmpty {

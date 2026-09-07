@@ -137,6 +137,11 @@ final class MouseTracker {
             if isPaused {
                 collapseTimer?.invalidate()
                 collapseTimer = nil
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                    guard let self, !self.isPaused else { return }
+                    self.handleMouseMoved(NSEvent.mouseLocation)
+                }
             }
         }
     }
