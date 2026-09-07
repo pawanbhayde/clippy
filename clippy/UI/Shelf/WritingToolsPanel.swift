@@ -266,12 +266,16 @@ struct WritingToolsPanelView: View {
     var onSaved: (String) -> Void
     var onPasteToApp: (String) -> Void
 
+    @ObservedObject private var geminiPrefs = GeminiPreferences.shared
+
     @State private var text: String
     @State private var originalText: String
     @State private var currentToolName: String = ""
     @State private var triggerWritingTools: Bool = false
     @State private var toastMessage: String?
     @State private var isProcessing: Bool = false
+    @State private var isShowingCustomPrompt: Bool = false
+    @State private var customPromptText: String = ""
 
     init(
         item: ClipboardItem,
@@ -312,14 +316,14 @@ struct WritingToolsPanelView: View {
                 )
                 .shadow(color: Color.black.opacity(0.6), radius: 28, x: 0, y: 14)
 
-            VStack(spacing: 10) {
-                // Row 1: Header Bar (Metadata on Left, Utility Actions on Right)
+            VStack(spacing: 9) {
+                // Row 1: Header Bar (Metadata & Gemini Model on Left, Utility Actions on Right)
                 HStack(spacing: 10) {
-                    // Left: Snippet document icon & preview/title
-                    HStack(spacing: 7) {
-                        Image(systemName: "doc.text.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(LinearGradient(colors: [.cyan, .blue], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    // Left: Sparkles icon & snippet preview/title
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(LinearGradient(colors: [.cyan, .blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
 
                         VStack(alignment: .leading, spacing: 1) {
                             Text(item.preview?.prefix(40) ?? "Snippet")
@@ -331,12 +335,54 @@ struct WritingToolsPanelView: View {
                                 .font(.system(size: 10, weight: .regular))
                                 .foregroundColor(.white.opacity(0.45))
                         }
+
+                        // Gemini Model / Key Config Indicator Button
+                        Button {
+                            AppDelegate.shared?.openSettings(tab: .gemini)
+                        } label: {
+                            HStack(spacing: 4) {
+                                if geminiPrefs.isConfigured {
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 8.5))
+                                        .foregroundColor(.cyan)
+                                    Text(geminiPrefs.activeModel.name)
+                                        .font(.system(size: 9.5, weight: .semibold))
+                                        .foregroundColor(.white.opacity(0.9))
+                                } else {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 8.5))
+                                        .foregroundColor(.orange)
+                                    Text("Set Gemini Key")
+                                        .font(.system(size: 9.5, weight: .semibold))
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(geminiPrefs.isConfigured ? Color.blue.opacity(0.16) : Color.orange.opacity(0.14)))
+                            .overlay(Capsule().stroke(geminiPrefs.isConfigured ? Color.blue.opacity(0.35) : Color.orange.opacity(0.35), lineWidth: 0.8))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Click to open Gemini AI settings")
                     }
 
                     Spacer()
 
-                    // Right: Utility Actions & Close
+                    // Right: Processing indicator & Utility Actions
                     HStack(spacing: 8) {
+                        if isProcessing {
+                            HStack(spacing: 5) {
+                                ProgressView()
+                                    .controlSize(.mini)
+                                Text("Gemini Thinking...")
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.cyan)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3.5)
+                            .background(Capsule().fill(Color.blue.opacity(0.15)))
+                        }
+
                         Button {
                             copyCurrentText()
                         } label: {
@@ -385,7 +431,46 @@ struct WritingToolsPanelView: View {
                     }
                 }
                 .padding(.horizontal, 18)
-                .padding(.top, 14)
+                .padding(.top, 13)
+
+                // Optional API Key Missing Hint
+                if !geminiPrefs.isConfigured {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 10.5, weight: .semibold))
+                            .foregroundColor(.cyan)
+
+                        Text("Bring-Your-Own-Key: Add your free Gemini API key in Settings to activate AI rewrites.")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.85))
+
+                        Spacer()
+
+                        Button {
+                            AppDelegate.shared?.openSettings(tab: .gemini)
+                        } label: {
+                            HStack(spacing: 3) {
+                                Text("Settings")
+                                    .font(.system(size: 10, weight: .bold))
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 8))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.blue))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
+                            .fill(Color.blue.opacity(0.10))
+                            .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).stroke(Color.blue.opacity(0.25), lineWidth: 0.8))
+                    )
+                    .padding(.horizontal, 18)
+                }
 
                 // Row 2: One-Click Rewrite Chips & Action Capsule
                 HStack(spacing: 6) {
@@ -405,7 +490,7 @@ struct WritingToolsPanelView: View {
                         .background(Capsule().fill(Color.white.opacity(canRevert ? 0.12 : 0.04)))
                     }
                     .buttonStyle(.plain)
-                    .disabled(!canRevert)
+                    .disabled(!canRevert || isProcessing)
                     .help("Revert to original text")
 
                     Divider()
@@ -419,63 +504,84 @@ struct WritingToolsPanelView: View {
                                 title: "Proofread",
                                 icon: "text.badge.checkmark",
                                 isSelected: currentToolName == "Proofread",
-                                action: { applyProofread() }
+                                isProcessing: isProcessing && currentToolName == "Proofread",
+                                action: { applyGeminiAction(.proofread) }
                             )
 
                             WritingToolChip(
                                 title: "Concise",
                                 icon: "arrow.down.right.and.arrow.up.left",
                                 isSelected: currentToolName == "Concise",
-                                action: { applyRewrite(style: "Concise") }
+                                isProcessing: isProcessing && currentToolName == "Concise",
+                                action: { applyGeminiAction(.concise) }
                             )
 
                             WritingToolChip(
                                 title: "Friendly",
                                 icon: "face.smiling",
                                 isSelected: currentToolName == "Friendly",
-                                action: { applyRewrite(style: "Friendly") }
+                                isProcessing: isProcessing && currentToolName == "Friendly",
+                                action: { applyGeminiAction(.friendly) }
                             )
 
                             WritingToolChip(
                                 title: "Professional",
                                 icon: "briefcase",
                                 isSelected: currentToolName == "Professional",
-                                action: { applyRewrite(style: "Professional") }
+                                isProcessing: isProcessing && currentToolName == "Professional",
+                                action: { applyGeminiAction(.professional) }
                             )
 
                             WritingToolChip(
                                 title: "Summary",
                                 icon: "text.quote",
                                 isSelected: currentToolName == "Summary",
-                                action: { applyTransform(type: "Summary") }
+                                isProcessing: isProcessing && currentToolName == "Summary",
+                                action: { applyGeminiAction(.summary) }
                             )
 
                             WritingToolChip(
                                 title: "Key Points",
                                 icon: "list.bullet.indent",
                                 isSelected: currentToolName == "Key Points",
-                                action: { applyTransform(type: "Key Points") }
+                                isProcessing: isProcessing && currentToolName == "Key Points",
+                                action: { applyGeminiAction(.keyPoints) }
                             )
 
                             WritingToolChip(
                                 title: "List",
                                 icon: "list.bullet",
                                 isSelected: currentToolName == "List",
-                                action: { applyTransform(type: "List") }
+                                isProcessing: isProcessing && currentToolName == "List",
+                                action: { applyGeminiAction(.list) }
                             )
 
                             WritingToolChip(
                                 title: "Table",
                                 icon: "tablecells",
                                 isSelected: currentToolName == "Table",
-                                action: { applyTransform(type: "Table") }
+                                isProcessing: isProcessing && currentToolName == "Table",
+                                action: { applyGeminiAction(.table) }
+                            )
+
+                            WritingToolChip(
+                                title: "Custom...",
+                                icon: "wand.and.stars",
+                                isSelected: isShowingCustomPrompt,
+                                isGradient: true,
+                                isProcessing: isProcessing && currentToolName == "Custom",
+                                action: {
+                                    withAnimation(.easeInOut(duration: 0.15)) {
+                                        isShowingCustomPrompt.toggle()
+                                    }
+                                }
                             )
 
                             WritingToolChip(
                                 title: "Apple Tools",
-                                icon: "wand.and.sparkles",
+                                icon: "apple.terminal",
                                 isSelected: false,
-                                isGradient: true,
+                                isProcessing: false,
                                 action: { invokeNativeWritingTools() }
                             )
                         }
@@ -498,6 +604,7 @@ struct WritingToolsPanelView: View {
                             .background(Capsule().fill(Color.blue))
                     }
                     .buttonStyle(.plain)
+                    .disabled(isProcessing)
                     .help("Save refined text and finish")
                 }
                 .padding(.horizontal, 8)
@@ -509,17 +616,70 @@ struct WritingToolsPanelView: View {
                 )
                 .padding(.horizontal, 18)
 
-                // Main Editor Area with Apple Intelligence motif watermark
+                // Optional Custom Prompt Inline Bar
+                if isShowingCustomPrompt {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 11))
+                            .foregroundColor(.purple)
+
+                        TextField("Ask Gemini to rewrite, translate, fix code, or reformat...", text: $customPromptText)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 11.5))
+                            .foregroundColor(.white)
+                            .onSubmit {
+                                applyCustomPrompt()
+                            }
+
+                        if !customPromptText.isEmpty {
+                            Button {
+                                applyCustomPrompt()
+                            } label: {
+                                Text("Rewrite")
+                                    .font(.system(size: 10.5, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 9)
+                                    .padding(.vertical, 3.5)
+                                    .background(Capsule().fill(Color.purple))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(isProcessing)
+                        }
+
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                isShowingCustomPrompt = false
+                            }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.white.opacity(0.6))
+                                .padding(4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.purple.opacity(0.12))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.purple.opacity(0.35), lineWidth: 0.8))
+                    )
+                    .padding(.horizontal, 18)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+
+                // Main Editor Area with Gemini AI motif watermark
                 ZStack {
-                    // Subtle 3D Apple Intelligence wand/crystal emblem in background
-                    Image(systemName: "wand.and.sparkles")
+                    // Subtle Gemini sparkles emblem in background
+                    Image(systemName: "sparkles")
                         .font(.system(size: 110, weight: .ultraLight))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [
-                                    Color.purple.opacity(0.06),
+                                    Color.cyan.opacity(0.06),
                                     Color.blue.opacity(0.06),
-                                    Color.pink.opacity(0.05)
+                                    Color.purple.opacity(0.05)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -602,49 +762,92 @@ struct WritingToolsPanelView: View {
         currentToolName = "Writing Tools"
     }
 
-    private func applyRewrite(style: String) {
-        currentToolName = style
-        switch style {
-        case "Concise":
+    private func applyGeminiAction(_ action: GeminiAction) {
+        currentToolName = action.title
+
+        guard geminiPrefs.isConfigured else {
+            // Apply offline transformer fallback immediately
+            applyOfflineFallback(action: action)
+            showToast("\(action.title) applied (Offline) • Set Gemini Key for AI")
+            return
+        }
+
+        isProcessing = true
+        Task {
+            do {
+                let refined = try await GeminiService.shared.transformText(text, action: action, preferences: geminiPrefs)
+                await MainActor.run {
+                    self.text = refined
+                    self.isProcessing = false
+                    self.showToast("\(action.title) Applied (\(geminiPrefs.activeModel.name))")
+                }
+            } catch {
+                await MainActor.run {
+                    self.isProcessing = false
+                    self.applyOfflineFallback(action: action)
+                    self.showToast("Gemini Error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func applyCustomPrompt() {
+        let prompt = customPromptText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !prompt.isEmpty else { return }
+        currentToolName = "Custom"
+
+        guard geminiPrefs.isConfigured else {
+            showToast("Gemini API Key Required for Custom Prompts")
+            AppDelegate.shared?.openSettings(tab: .gemini)
+            return
+        }
+
+        isProcessing = true
+        Task {
+            do {
+                let refined = try await GeminiService.shared.transformText(text, action: .custom(prompt: prompt), preferences: geminiPrefs)
+                await MainActor.run {
+                    self.text = refined
+                    self.isProcessing = false
+                    self.showToast("Custom Prompt Applied")
+                }
+            } catch {
+                await MainActor.run {
+                    self.isProcessing = false
+                    self.showToast("Gemini Error: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func applyOfflineFallback(action: GeminiAction) {
+        switch action {
+        case .proofread:
+            text = WritingToolsTransformer.proofread(text)
+        case .concise:
             text = WritingToolsTransformer.makeConcise(text)
-        case "Friendly":
+        case .friendly:
             text = WritingToolsTransformer.makeFriendly(text)
-        case "Professional":
+        case .professional:
             text = WritingToolsTransformer.makeProfessional(text)
-        default:
-            break
-        }
-        showToast("Rewritten: \(style)")
-    }
-
-    private func applyTransform(type: String) {
-        currentToolName = type
-        switch type {
-        case "Summary":
+        case .summary:
             text = WritingToolsTransformer.summarize(text)
-        case "Key Points":
+        case .keyPoints:
             text = WritingToolsTransformer.extractKeyPoints(text)
-        case "List":
+        case .list:
             text = WritingToolsTransformer.convertToList(text)
-        case "Table":
+        case .table:
             text = WritingToolsTransformer.convertToTable(text)
-        default:
+        case .custom:
             break
         }
-        showToast("Transformed: \(type)")
-    }
-
-    private func applyProofread() {
-        currentToolName = "Proofread"
-        text = WritingToolsTransformer.proofread(text)
-        showToast("Proofread Applied")
     }
 
     private func showToast(_ msg: String) {
         withAnimation(.easeInOut(duration: 0.15)) {
             toastMessage = msg
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
             withAnimation(.easeInOut(duration: 0.2)) {
                 toastMessage = nil
             }
@@ -659,6 +862,7 @@ private struct WritingToolChip: View {
     let icon: String
     var isSelected: Bool = false
     var isGradient: Bool = false
+    var isProcessing: Bool = false
     let action: () -> Void
 
     @State private var isHovered: Bool = false
@@ -686,7 +890,10 @@ private struct WritingToolChip: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                if isGradient {
+                if isProcessing {
+                    ProgressView()
+                        .controlSize(.mini)
+                } else if isGradient {
                     Image(systemName: icon)
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: [.purple, .blue, .pink], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -709,6 +916,7 @@ private struct WritingToolChip: View {
             )
         }
         .buttonStyle(.plain)
+        .disabled(isProcessing)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.12)) {
                 isHovered = hovering
@@ -716,6 +924,7 @@ private struct WritingToolChip: View {
         }
     }
 }
+
 
 // MARK: - On-Device Writing Tools Transformer (Zero-latency fallback & instant rewrite)
 

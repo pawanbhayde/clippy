@@ -193,7 +193,7 @@ struct ClipboardCard: View {
                 Button {
                     onOpenWritingTools?(item)
                 } label: {
-                    Label("Apple Writing Tools...", systemImage: "wand.and.sparkles")
+                    Label("Gemini Writing Tools...", systemImage: "sparkles")
                 }
             }
 
