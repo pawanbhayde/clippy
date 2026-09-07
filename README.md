@@ -30,12 +30,11 @@
     - [3. Smart Scratchpad \& Multi-Item Merger ("Combine \& Paste")](#3-smart-scratchpad--multi-item-merger-combine--paste)
     - [4. Visual Diff Comparison Engine](#4-visual-diff-comparison-engine)
     - [5. Built-in Apple Vision OCR \& Searchable Screenshots](#5-built-in-apple-vision-ocr--searchable-screenshots)
-    - [6. Instant Text Transformers ("Paste As...")](#6-instant-text-transformers-paste-as)
-    - [7. Color Inspector \& Palette Converter](#7-color-inspector--palette-converter)
-    - [8. Secret Auto-Masking \& Auto-Purge Countdown](#8-secret-auto-masking--auto-purge-countdown)
-    - [9. Notch "Drop Zone" \& Temporary Stash](#9-notch-drop-zone--temporary-stash)
-    - [10. Power Search Operators \& Subsequence Fuzzy Matching](#10-power-search-operators--subsequence-fuzzy-matching)
-    - [11. Developer Utilities (JSON \& Connection Strings)](#11-developer-utilities-json--connection-strings)
+    - [6. Color Inspector \& Palette Converter](#6-color-inspector--palette-converter)
+    - [7. Secret Auto-Masking \& Auto-Purge Countdown](#7-secret-auto-masking--auto-purge-countdown)
+    - [8. Notch "Drop Zone" \& Temporary Stash](#8-notch-drop-zone--temporary-stash)
+    - [9. Power Search Operators \& Subsequence Fuzzy Matching](#9-power-search-operators--subsequence-fuzzy-matching)
+    - [10. Developer Utilities (JSON \& Connection Strings)](#10-developer-utilities-json--connection-strings)
   - [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
   - [🔎 Search Operators Syntax](#-search-operators-syntax)
   - [🛡️ Privacy \& Security First](#️-privacy--security-first)
@@ -63,11 +62,11 @@ Standard macOS clipboard managers live in cluttered windows, separate menus, or 
 | Feature | Description |
 | :--- | :--- |
 | 🏝️ **Dynamic Island Shelf** | Native notch-anchored panel with fluid spring animations and multi-monitor awareness. |
+| 🔔 **Notch Copy Notification** | Dynamic Island pill pops down on copy, displaying the source app icon & saved text preview. |
 | ⚡ **Sequential Paste Queue** | Copy 10 items in a row and paste them sequentially (`1 → 2 → 3...`) into forms or docs with `⌘V`. |
 | 🪄 **Multi-Item Merger** | Select multiple items with `⌘`/`⇧` and join as bullet lists, CSVs, or SQL `IN ('a','b')`. |
 | 📊 **Visual Diff Engine** | Side-by-side and unified diff comparison between any two clipboard text/code snippets. |
 | 🔍 **Apple Vision OCR** | Hardware-accelerated offline OCR makes text inside copied screenshots instantly searchable and copyable. |
-| 🔤 **"Paste As..." Transformers** | Strip URL tracking parameters, remove HTML, change case, encode Base64/URL, or escape for Swift/JS/Python/JSON. |
 | 🎨 **Live Color Inspector** | Identifies HEX, RGB, and HSL. Provides live swatches and 1-click conversions to Swift `Color` or Compose. |
 | 🛡️ **Secret Auto-Masking** | Automatically masks API keys, passwords, and OTPs as `••••••••`, with configurable auto-purge timers. |
 | 📥 **Notch Drop Zone & Stash** | Drag files or images to the notch to stash them across Spaces/full-screen apps or save to history. |
@@ -81,6 +80,7 @@ Standard macOS clipboard managers live in cluttered windows, separate menus, or 
 
 ### 1. Dynamic Island Notch Shelf
 - **Adaptive Screen Geometry**: Detects whether your Mac has a hardware camera notch (`safeAreaInsets.top > 0`) and automatically shapes itself using `NotchShelfShape`. On notchless displays or external monitors, it renders as an elegant floating Dynamic Island pill.
+- **Instant Copy Notch Notification**: Whenever you copy text, code, colors, or images from any app, a subtle Dynamic Island notch capsule springs down under your camera notch. It displays the frontmost app's icon, a vibrant status dot, and a single-line preview of the saved text. Click the pill to immediately expand your clipboard shelf, or let it smoothly contract back into the notch after 2.2 seconds.
 - **Smart Pass-Through**: When collapsed, Clippy disables its mouse tracking area and shrinks its hit-testing footprint to avoid blocking browser tabs or window controls located near the top of the display.
 - **Fluid Spring Physics**: Uses high-performance SwiftUI spring animations coordinated with AppKit's native window server for buttery 120Hz ProMotion response.
 
@@ -112,27 +112,7 @@ No need to open a text editor just to combine lines:
 - **1-Click "Copy Text"**: Extract text directly from screenshots, diagrams, and error dialogs without external utilities.
 - **Search Inside Images**: Search for text that only appeared inside an image, and Clippy will find the matching screenshot in your history.
 
-### 6. Instant Text Transformers ("Paste As...")
-Right-click any card or hover and click the wand icon (`🪄`) to access instantaneous transforms:
-- **Clean Plain Text**:
-  - Strip HTML and XML tags (`<p>`, `<b>`, `<div>`).
-  - Strip URL analytics and tracking tags (`?utm_source=...`, `fbclid`, `gclid`, `igshid`, `mc_eid`, `si`, `ref`, etc.).
-  - Normalize whitespaces and line endings.
-- **Case Conversions**:
-  - `camelCase` (e.g., `userAuthenticationToken`)
-  - `snake_case` (e.g., `user_authentication_token`)
-  - `kebab-case` (e.g., `user-authentication-token`)
-  - `PascalCase` (e.g., `UserAuthenticationToken`)
-  - `CONSTANT_CASE` (e.g., `USER_AUTHENTICATION_TOKEN`)
-  - `Title Case` (e.g., `User Authentication Token`)
-- **Developer Encodings**:
-  - Base64 Encode & Decode
-  - URL Percent-Encode & Decode
-  - HTML Entities Encode & Decode
-- **String Escaping**:
-  - Escape for **Swift**, **JavaScript**, **Python**, and **JSON** string literals.
-
-### 7. Color Inspector & Palette Converter
+### 6. Color Inspector & Palette Converter
 - Automatically parses Hex codes (`#6366F1`, `#FFF`), CSS `rgb(r, g, b)`, `rgba(...)`, `hsl(...)`, and `hsla(...)`.
 - Displays an interactive color swatch right on the clipboard card.
 - Click to convert and copy as:
@@ -142,23 +122,23 @@ Right-click any card or hover and click the wand icon (`🪄`) to access instant
   - **AppKit** `NSColor(red: ..., green: ..., blue: ..., alpha: 1.0)`
   - **Jetpack Compose** `Color(0xFF6366F1)`
 
-### 8. Secret Auto-Masking & Auto-Purge Countdown
+### 7. Secret Auto-Masking & Auto-Purge Countdown
 Never accidentally flash an API token or password during a screen share, video recording, or meeting:
 - **Automatic Detection**: Recognizes API tokens (OpenAI `sk_live_`, GitHub `ghp_`, AWS `AKIA`, Stripe `pk_live_`), passwords (`password = ...`), and 2FA verification codes / OTPs.
 - **Masked by Default**: Masked as `••••••••` with click-to-reveal.
 - **Auto-Purge Countdown**: Sensitive items are tagged with an automatic expiration timer (default 60 seconds) and permanently erased when the timer expires.
 
-### 9. Notch "Drop Zone" & Temporary Stash
+### 8. Notch "Drop Zone" & Temporary Stash
 Drag files, images, code selections, or URLs to the camera notch to trigger the dual **Notch Drop Zone**:
 - **Left Zone — Temporary Stash**: Holds items temporarily so you can drag them across macOS Spaces, full-screen windows, or desktops, then drag them back out. Stashed items are cleared once dropped or dragged out.
 - **Right Zone — Save to Clippy**: Permanently stores the dropped content into your Clippy clipboard history.
 
-### 10. Power Search Operators & Subsequence Fuzzy Matching
+### 9. Power Search Operators & Subsequence Fuzzy Matching
 Instantly filter thousands of clipboard items using powerful search tokens combined with fuzzy scoring:
 - Combine operators: `app:xcode type:code has:url`
 - Subsequence fuzzy matching allows searching `dco` to find `docker-compose`.
 
-### 11. Developer Utilities (JSON & Connection Strings)
+### 10. Developer Utilities (JSON & Connection Strings)
 - **JSON Beautifier & Minifier**: Pretty-prints messy JSON payloads with 2-space indentation or compresses them into single-line minified strings.
 - **TypeScript Generator**: Generates TypeScript interfaces directly from copied JSON objects.
 - **Connection String Analyzer**: Parses database URLs (`postgresql://`, `mysql://`, `mongodb://`, `redis://`), masks credentials, and extracts host, port, database, and connection parameters.
@@ -175,7 +155,6 @@ Instantly filter thousands of clipboard items using powerful search tokens combi
 | **`⌘ C`** | Copy selected item to clipboard without pasting | Clippy Window |
 | **`Space`** | Open Quick Look / Rich Expanded Preview | Clippy Window |
 | **`⌘ Click`** / **`⇧ Click`** | Multi-select items for Merger / Diff | Clippy Window |
-| **`⌥ Click`** / **Right Click** | Open "Paste As..." transformation menu | Clippy Window |
 | **`⌘ F`** | Focus search input field | Clippy Window |
 | **`⌘ D`** | Add or remove item from Favorites | Clippy Window |
 | **`⌫` (Delete)** | Delete selected item from history | Clippy Window |
@@ -287,7 +266,6 @@ clippy/
 │   │   ├── ColorDetector.swift    # HEX, RGB, HSL parsing & swatches
 │   │   └── CodeDetector.swift     # Programming language syntax recognition
 │   ├── Developer/
-│   │   ├── TextTransformations.swift # "Paste As..." cleaning, cases, encodings, escapes
 │   │   ├── ColorTransformations.swift# Format conversions (Swift, NSColor, Compose)
 │   │   ├── JSONTransformations.swift # Format, minify, TypeScript interface generation
 │   │   └── ConnectionStringTransformations.swift # Database URL parser
@@ -314,7 +292,7 @@ clippy/
     │   └── ShelfView.swift        # Dynamic Island SwiftUI view & controls
     ├── Clipboard/
     │   ├── ClipboardGrid.swift    # Multi-selection grid with keyboard navigation
-    │   ├── ClipboardCard.swift    # Card rendering, hover actions, "Paste As..." menus
+    │   ├── ClipboardCard.swift    # Card rendering, hover actions & context menus
     │   └── ClipboardPreview.swift # Quick Look & expanded detail modal
     ├── Merger/
     │   ├── MergerBar.swift        # Floating action bar for multi-selected items

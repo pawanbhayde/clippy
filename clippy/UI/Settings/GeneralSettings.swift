@@ -7,6 +7,7 @@ import KeyboardShortcuts
 struct GeneralSettingsView: View {
     @ObservedObject private var devPrefs = DeveloperPreferences.shared
     @AppStorage("isDirectPasteEnabled") private var isDirectPasteEnabled = true
+    @AppStorage("isCopyNotificationEnabled") private var isCopyNotificationEnabled = true
 
     var body: some View {
         ScrollView {
@@ -85,6 +86,22 @@ struct GeneralSettingsView: View {
                     .font(.body)
 
                 Text("When clicking a card in Clippy Island, automatically paste the item directly into the active application.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 20)
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Notch Island Notification")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Toggle("Show notch notification when copying", isOn: $isCopyNotificationEnabled)
+                    .font(.body)
+
+                Text("Briefly displays a subtle Dynamic Island notch pill showing the copied app icon and text preview.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.leading, 20)

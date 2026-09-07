@@ -18,6 +18,8 @@ final class ShelfController {
     private var previousApp: NSRunningApplication?
     private var workspaceObserver: Any?
     private var dropObserver: Any?
+    private var newItemObserver: Any?
+    private var copyNotificationDismissWorkItem: DispatchWorkItem?
     private var clickOutsideGlobalMonitor: Any?
     private var clickOutsideLocalMonitor: Any?
     private var screenshotKeyMonitor: Any?
@@ -41,6 +43,7 @@ final class ShelfController {
                 }
             },
             onCollapseRequested: { [weak self] in self?.collapse() },
+            onExpandRequested: { [weak self] in self?.expand() },
             onStartScreenshot: { [weak self] in self?.startScreenshotFlow() },
             onCaptureScreenshot: { [weak self] mode in self?.executeScreenshotCapture(mode: mode) },
             onCancelScreenshot: { [weak self] in self?.cancelScreenshotHUD() }
@@ -117,11 +120,13 @@ final class ShelfController {
             object: nil,
             queue: .main
         ) { [weak self] notification in
-            guard let self else { return }
-            if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-               app.processIdentifier != NSRunningApplication.current.processIdentifier,
-               app.activationPolicy == .regular {
-                self.previousApp = app
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                   app.processIdentifier != NSRunningApplication.current.processIdentifier,
+                   app.activationPolicy == .regular {
+                    self.previousApp = app
+                }
             }
         }
         if let current = NSWorkspace.shared.frontmostApplication,
@@ -136,7 +141,21 @@ final class ShelfController {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.collapseImmediately()
+            MainActor.assumeIsolated {
+                self?.collapseImmediately()
+            }
+        }
+
+        // Show Dynamic Island notch pill notification whenever a new item is captured and saved
+        self.newItemObserver = NotificationCenter.default.addObserver(
+            forName: .clippyNewItemSaved,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            MainActor.assumeIsolated {
+                guard let self, let item = notification.userInfo?["item"] as? ClipboardItem else { return }
+                self.showCopyNotification(for: item)
+            }
         }
     }
 
@@ -151,6 +170,7 @@ final class ShelfController {
     }
 
     func stop() {
+        dismissCopyNotificationImmediately()
         if let workspaceObserver {
             NSWorkspace.shared.notificationCenter.removeObserver(workspaceObserver)
             self.workspaceObserver = nil
@@ -159,12 +179,17 @@ final class ShelfController {
             NotificationCenter.default.removeObserver(dropObserver)
             self.dropObserver = nil
         }
+        if let newItemObserver {
+            NotificationCenter.default.removeObserver(newItemObserver)
+            self.newItemObserver = nil
+        }
         mouseTracker.stop()
         globalShortcut.stop()
         panel.orderOut(nil)
     }
 
     deinit {
+        copyNotificationDismissWorkItem?.cancel()
         if let clickOutsideGlobalMonitor {
             NSEvent.removeMonitor(clickOutsideGlobalMonitor)
         }
@@ -179,6 +204,9 @@ final class ShelfController {
         }
         if let dropObserver {
             NotificationCenter.default.removeObserver(dropObserver)
+        }
+        if let newItemObserver {
+            NotificationCenter.default.removeObserver(newItemObserver)
         }
     }
 
@@ -195,6 +223,7 @@ final class ShelfController {
     /// Collapses immediately (e.g. after a card tap copies an item to paste),
     /// bypassing the animation delay so target app receives focus instantly.
     func collapseImmediately() {
+        dismissCopyNotificationImmediately()
         if animationState.isScreenshotHUDActive {
             cancelScreenshotHUD()
         }
@@ -254,6 +283,7 @@ final class ShelfController {
     }
 
     func expand() {
+        dismissCopyNotificationImmediately()
         guard !isExpanded else { return }
         let frontmost = NSWorkspace.shared.frontmostApplication
         if let frontmost, frontmost.processIdentifier != NSRunningApplication.current.processIdentifier, frontmost.activationPolicy == .regular {
@@ -354,6 +384,7 @@ final class ShelfController {
     }
 
     func startScreenshotFlow() {
+        dismissCopyNotificationImmediately()
         guard !animationState.isScreenshotHUDActive else { return }
 
         // 1. Immediately pause mouseTracker so hover does not auto-collapse or interfere
@@ -435,6 +466,57 @@ final class ShelfController {
             self.panel.updateFrame(for: ShelfAnimation.collapsedSize)
         }
     }
+
+    // MARK: - Dynamic Island Copy Notification Pill
+
+    func showCopyNotification(for item: ClipboardItem) {
+        guard !isExpanded, !animationState.isScreenshotHUDActive else { return }
+        let isEnabled = UserDefaults.standard.object(forKey: "isCopyNotificationEnabled") as? Bool ?? true
+        guard isEnabled else { return }
+
+        // Cancel previous dismissal work item
+        copyNotificationDismissWorkItem?.cancel()
+        copyNotificationDismissWorkItem = nil
+
+        panel.updateFrame(for: ShelfAnimation.copyNotificationSize)
+        panel.ignoresMouseEvents = false
+
+        animationState.activeCopyNotificationItem = item
+        withAnimation(ShelfAnimation.expandSpring) {
+            animationState.isCopyNotificationActive = true
+        }
+
+        let workItem = DispatchWorkItem { [weak self] in
+            self?.dismissCopyNotification()
+        }
+        copyNotificationDismissWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2, execute: workItem)
+    }
+
+    func dismissCopyNotification() {
+        copyNotificationDismissWorkItem?.cancel()
+        copyNotificationDismissWorkItem = nil
+
+        guard animationState.isCopyNotificationActive, !isExpanded else { return }
+
+        withAnimation(ShelfAnimation.collapseSpring) {
+            animationState.isCopyNotificationActive = false
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            guard let self, !self.isExpanded, !self.animationState.isCopyNotificationActive, !self.animationState.isScreenshotHUDActive else { return }
+            self.animationState.activeCopyNotificationItem = nil
+            self.panel.updateFrame(for: ShelfAnimation.collapsedSize)
+            self.panel.ignoresMouseEvents = true
+        }
+    }
+
+    func dismissCopyNotificationImmediately() {
+        copyNotificationDismissWorkItem?.cancel()
+        copyNotificationDismissWorkItem = nil
+        animationState.isCopyNotificationActive = false
+        animationState.activeCopyNotificationItem = nil
+    }
 }
 
 // MARK: - Hosting View without Focus Ring and Selective Hit-Testing
@@ -454,7 +536,7 @@ private final class NonFocusRingHostingView<Content: View>: NSHostingView<Conten
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        guard let controller = shelfController, (controller.isExpanded || controller.animationState.isScreenshotHUDActive) else { return nil }
+        guard let controller = shelfController, (controller.isExpanded || controller.animationState.isScreenshotHUDActive || controller.animationState.isCopyNotificationActive) else { return nil }
         return super.hitTest(point)
     }
 

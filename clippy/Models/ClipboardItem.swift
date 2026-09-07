@@ -82,3 +82,7 @@ struct ClipboardItem: Codable, Identifiable, Equatable {
         scheduledPurgeAt = try container.decodeIfPresent(Date.self, forKey: .scheduledPurgeAt)
     }
 }
+
+extension Notification.Name {
+    static let clippyNewItemSaved = Notification.Name("clippy.newItemSaved")
+}

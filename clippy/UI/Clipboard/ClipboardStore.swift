@@ -24,6 +24,7 @@ final class ClipboardStore: ObservableObject {
     private var indexedIDs: Set<UUID> = []
     private var hasBuiltIndex = false
     private var refreshTimer: Timer?
+    private var newItemObserver: Any?
 
     init(autoRefresh: Bool = true) {
         reloadCollections()
@@ -36,6 +37,24 @@ final class ClipboardStore: ObservableObject {
                     self?.reloadCollections()
                 }
             }
+        }
+
+        newItemObserver = NotificationCenter.default.addObserver(
+            forName: .clippyNewItemSaved,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reload()
+                self?.reloadCollections()
+            }
+        }
+    }
+
+    deinit {
+        refreshTimer?.invalidate()
+        if let newItemObserver {
+            NotificationCenter.default.removeObserver(newItemObserver)
         }
     }
 

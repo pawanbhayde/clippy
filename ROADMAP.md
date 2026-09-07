@@ -9,12 +9,11 @@ This document tracks upcoming unique and high-impact productivity features plann
 - [x] **1. Sequential / Queue Paste ("Paste Queue")**
 - [x] **2. Smart Scratchpad & Multi-Item Merger ("Combine & Paste")**
 - [x] **3. Built-in Image OCR & Text Extractor**
-- [x] **4. Instant Text Transformers ("Paste As...")**
-- [ ] **5. Snippet Templates with Dynamic Placeholders**
-- [x] **6. Color Inspector & Palette Converter**
-- [x] **7. Secret Auto-Masking & Auto-Purge Timer**
-- [x] **8. Notch "Drop Zone" / Temporary Stash**
-- [x] **9. Search Operators & App Filters**
+- [ ] **4. Snippet Templates with Dynamic Placeholders**
+- [x] **5. Color Inspector & Palette Converter**
+- [x] **6. Secret Auto-Masking & Auto-Purge Timer**
+- [x] **7. Notch "Drop Zone" / Temporary Stash**
+- [x] **8. Search Operators & App Filters**
 
 ---
 
@@ -59,20 +58,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 ---
 
-### 4. 🔤 Instant Text Transformers ("Paste As...")
-* **Goal**: Clean and reformat text instantly before pasting.
-* **Options**:
-  - **Clean Plain Text**: Strip formatting, HTML tags, and tracking URL parameters (e.g., `?utm_source=...`).
-  - **Case Conversion**: `camelCase`, `snake_case`, `kebab-case`, `PascalCase`, `CONSTANT_CASE`, `Title Case`.
-  - **Developer Encodings**: Base64 encode/decode, URL encode/decode, HTML entities.
-  - **Escaping**: Escape quotes/slashes for Swift, JavaScript, Python, JSON strings.
-* **Implementation Notes**:
-  - Accessible via right-click contextual menu on cards or holding `⌥` on click.
-  - Extend existing `Core/Developer` transformations architecture.
-
----
-
-### 5. 📌 Snippet Templates with Dynamic Placeholders
+### 4. 📌 Snippet Templates with Dynamic Placeholders
 * **Goal**: Store frequently used templates with variable replacement.
 * **Workflow**:
   - Dedicated "Snippets" tab in collections.
@@ -84,7 +70,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 ---
 
-### 6. 🎨 Color Inspector & Palette Converter
+### 5. 🎨 Color Inspector & Palette Converter
 * **Goal**: Detect color codes in copied text and provide color previews + format conversions.
 * **Workflow**:
   - When hex codes (`#6366F1`), `rgb(...)`, or `hsl(...)` are copied, display a color swatch badge on the card.
@@ -98,7 +84,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 ---
 
-### 7. 🛡️ Secret Auto-Masking & Auto-Purge Timer
+### 6. 🛡️ Secret Auto-Masking & Auto-Purge Timer
 * **Goal**: Prevent sensitive data (passwords, tokens, OTPs) from lingering in clipboard history.
 * **Workflow**:
   - **Masking**: Display sensitive items as `••••••••` by default with click-to-reveal.
@@ -110,7 +96,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 ---
 
-### 8. ⏱️ Notch "Drop Zone" / Temporary Stash
+### 7. ⏱️ Notch "Drop Zone" / Temporary Stash
 * **Goal**: Drag files or images to the MacBook notch to temporarily hold them across spaces/apps.
 * **Workflow**:
   - Dragging any item from Finder, browser, or app to the top-center notch expands a small "Drop Shelf".
@@ -121,7 +107,7 @@ This document tracks upcoming unique and high-impact productivity features plann
 
 ---
 
-### 9. 🔎 Search Operators & App Source Filters
+### 8. 🔎 Search Operators & App Source Filters
 * **Goal**: Rapidly pinpoint specific items out of hundreds in history.
 * **Syntax**:
   - `app:xcode` or `app:slack` or `app:chrome`

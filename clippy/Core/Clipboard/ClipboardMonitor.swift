@@ -180,6 +180,11 @@ final class ClipboardMonitor {
             onNewItem?(item)
             let captured = item
             DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: .clippyNewItemSaved,
+                    object: nil,
+                    userInfo: ["item": captured]
+                )
                 if PasteQueueManager.shared.isActive {
                     PasteQueueManager.shared.enqueue(captured)
                 }

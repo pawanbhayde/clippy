@@ -8,7 +8,7 @@ export default function PrepareSection() {
                 <div
                   className="text-primary/50 flex h-12 items-center justify-between font-mono text-xs font-medium tracking-wider md:h-16 md:text-sm"
                 >
-                  <span>[02] INSTANT TRANSFORMERS</span>
+                  <span>[02] DEVELOPER UTILITIES</span>
                   <span>/ DEVELOPER TOOLS</span>
                 </div>
               </div>
@@ -24,13 +24,13 @@ export default function PrepareSection() {
                     <h5
                       className="font-display mb-2 text-xl leading-tight font-medium tracking-tight md:mb-2 lg:max-w-2/3 lg:text-2xl"
                     >
-                      Instant &quot;Paste As...&quot; Cleaners
+                      Developer-First Clipboard Utilities
                     </h5>
                     <div
                       className="text-app-secondary-invert grow text-base text-pretty md:text-lg md:leading-snug"
                     >
                       <p>
-                        Transform snippets before pasting: automatically strip tracking query parameters (UTMs, fbclid), convert case formats, or escape strings with a single click.
+                        Format JSON with 2-space indentation or minification, generate TypeScript interfaces, inspect color codes, and parse database connection strings with zero context switching.
                       </p>
                     </div>
                     <div className="grow"></div>
@@ -286,7 +286,7 @@ export default function PrepareSection() {
                               <div
                                 className="text-accent-foreground flex h-8 shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-500 px-3 text-sm font-medium"
                               >
-                                <span>Paste As...</span>
+                                <span>Format JSON</span>
                               </div>
                             </div>
                           </div>

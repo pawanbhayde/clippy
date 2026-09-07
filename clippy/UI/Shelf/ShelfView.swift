@@ -10,6 +10,7 @@ struct ShelfView: View {
     @ObservedObject var store: ClipboardStore
     var onCopied: () -> Void
     var onCollapseRequested: () -> Void
+    var onExpandRequested: (() -> Void)? = nil
     var onStartScreenshot: (() -> Void)? = nil
     var onCaptureScreenshot: ((ScreenshotManager.CaptureMode) -> Void)? = nil
     var onCancelScreenshot: (() -> Void)? = nil
@@ -40,6 +41,12 @@ struct ShelfView: View {
                     )
                     .padding(.top, 4)
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                } else if state.isCopyNotificationActive, let item = state.activeCopyNotificationItem {
+                    CopyNotificationPill(item: item) {
+                        onExpandRequested?()
+                    }
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .top)))
                 } else if queueManager.isActive && (!queueManager.queue.isEmpty || queueManager.isCompletedFeedback) {
                     QueueCollapsedPill(queueManager: queueManager)
                         .padding(.top, 4)
@@ -195,8 +202,8 @@ struct ShelfView: View {
             }
         }
         .frame(
-            width: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.width : ShelfAnimation.expandedSize.width,
-            height: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.height : ShelfAnimation.expandedSize.height,
+            width: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.width : ((state.isCopyNotificationActive || state.activeCopyNotificationItem != nil) ? ShelfAnimation.copyNotificationSize.width : ShelfAnimation.expandedSize.width),
+            height: state.isScreenshotHUDActive ? ShelfAnimation.screenshotHUDSize.height : ((state.isCopyNotificationActive || state.activeCopyNotificationItem != nil) ? ShelfAnimation.copyNotificationSize.height : ShelfAnimation.expandedSize.height),
             alignment: .top
         )
         .clipped()
