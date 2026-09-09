@@ -326,6 +326,7 @@ struct ShelfView: View {
     private func activateSelection() {
         guard let selectedID, let item = store.visibleItems.first(where: { $0.id == selectedID }) else { return }
         store.activate(item)
+        store.searchQuery = ""
         onCopied()
     }
 
@@ -362,6 +363,7 @@ struct ShelfView: View {
         ClipboardWriter.writeText(merged)
         showToast("Merged \(items.count) items as \(style.displayName) & Copied!")
         clearMultiSelection()
+        store.searchQuery = ""
         onCopied()
     }
 
@@ -372,6 +374,7 @@ struct ShelfView: View {
         ClipboardWriter.writeText(joined)
         showToast("Joined \(items.count) items & Copied!")
         clearMultiSelection()
+        store.searchQuery = ""
         onCopied()
     }
 
@@ -382,6 +385,7 @@ struct ShelfView: View {
         ClipboardWriter.writeText(joined)
         showToast("Combined \(items.count) items & Copied!")
         clearMultiSelection()
+        store.searchQuery = ""
         onCopied()
     }
 

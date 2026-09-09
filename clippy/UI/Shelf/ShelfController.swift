@@ -36,7 +36,14 @@ final class ShelfController {
             store: clipboardStore,
             onCopied: { [weak self] in
                 guard let self else { return }
-                let target = self.previousApp
+                var target = self.previousApp
+                if target == nil || target?.isTerminated == true {
+                    if let menuBarApp = NSWorkspace.shared.menuBarOwningApplication,
+                       menuBarApp.processIdentifier != NSRunningApplication.current.processIdentifier,
+                       menuBarApp.activationPolicy == .regular {
+                        target = menuBarApp
+                    }
+                }
                 self.collapseImmediately()
                 let isDirectPasteEnabled = UserDefaults.standard.object(forKey: "isDirectPasteEnabled") as? Bool ?? true
                 if isDirectPasteEnabled {
@@ -235,12 +242,18 @@ final class ShelfController {
         if animationState.isScreenshotHUDActive {
             cancelScreenshotHUD()
         }
+        // Resign any focused text fields (such as search bar) immediately
+        panel.makeFirstResponder(nil)
         panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
         isExpanded = false
         animationState.collapseImmediately()
         mouseTracker.forceCollapse()
+
+        // Order out to force window server to yield key window back to the target application
+        panel.orderOut(nil)
         panel.updateFrame(for: ShelfAnimation.collapsedSize)
+        panel.orderFront(nil)
     }
 
     /// Opens the expanded clipboard shelf.
@@ -296,6 +309,12 @@ final class ShelfController {
         let frontmost = NSWorkspace.shared.frontmostApplication
         if let frontmost, frontmost.processIdentifier != NSRunningApplication.current.processIdentifier, frontmost.activationPolicy == .regular {
             previousApp = frontmost
+        } else if previousApp == nil || previousApp?.isTerminated == true {
+            if let menuBarApp = NSWorkspace.shared.menuBarOwningApplication,
+               menuBarApp.processIdentifier != NSRunningApplication.current.processIdentifier,
+               menuBarApp.activationPolicy == .regular {
+                previousApp = menuBarApp
+            }
         }
         isExpanded = true
         panel.canReceiveKeyFocus = true
@@ -464,6 +483,7 @@ final class ShelfController {
         }
         closeWritingToolsPanel(andCollapseShelf: false)
         guard isExpanded else { return }
+        panel.makeFirstResponder(nil)
         isExpanded = false
         panel.canReceiveKeyFocus = false
         panel.ignoresMouseEvents = true
@@ -473,7 +493,9 @@ final class ShelfController {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { [weak self] in
             guard let self, !self.isExpanded else { return }
+            self.panel.orderOut(nil)
             self.panel.updateFrame(for: ShelfAnimation.collapsedSize)
+            self.panel.orderFront(nil)
         }
     }
 
@@ -506,7 +528,14 @@ final class ShelfController {
                 pb.clearContents()
                 pb.setString(refinedText, forType: .string)
                 ClipboardService.shared.saveToClippy(from: pb)
-                let target = self.previousApp
+                var target = self.previousApp
+                if target == nil || target?.isTerminated == true {
+                    if let menuBarApp = NSWorkspace.shared.menuBarOwningApplication,
+                       menuBarApp.processIdentifier != NSRunningApplication.current.processIdentifier,
+                       menuBarApp.activationPolicy == .regular {
+                        target = menuBarApp
+                    }
+                }
                 self.closeWritingToolsPanel(andCollapseShelf: false)
                 self.collapseImmediately()
                 let isDirectPasteEnabled = UserDefaults.standard.object(forKey: "isDirectPasteEnabled") as? Bool ?? true

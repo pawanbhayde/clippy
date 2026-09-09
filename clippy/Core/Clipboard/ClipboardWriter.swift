@@ -142,8 +142,8 @@ enum ClipboardWriter {
     /// it and simulating a `⌘V` keystroke.
     /// - Parameters:
     ///   - targetApp: The application to receive the paste (defaults to frontmost app if not self).
-    ///   - delay: Time interval in seconds to wait for target app window focus to settle (default 0.18s).
-    static func pasteToFrontmostApp(targetApp: NSRunningApplication? = nil, delay: TimeInterval = 0.18) {
+    ///   - delay: Time interval in seconds to wait for target app window focus to settle (default 0.20s).
+    static func pasteToFrontmostApp(targetApp: NSRunningApplication? = nil, delay: TimeInterval = 0.20) {
         let now = Date().timeIntervalSince1970
         guard now - lastPasteTimestamp > 0.35 else { return }
         lastPasteTimestamp = now
@@ -154,18 +154,25 @@ enum ClipboardWriter {
             return
         }
 
+        let currentPID = NSRunningApplication.current.processIdentifier
+
         let appToActivate: NSRunningApplication? = {
-            let currentPID = NSRunningApplication.current.processIdentifier
             if let target = targetApp, !target.isTerminated, target.processIdentifier != currentPID {
                 return target
             }
             if let frontmost = NSWorkspace.shared.frontmostApplication, !frontmost.isTerminated, frontmost.processIdentifier != currentPID {
                 return frontmost
             }
+            if let menuBarApp = NSWorkspace.shared.menuBarOwningApplication, !menuBarApp.isTerminated, menuBarApp.processIdentifier != currentPID, menuBarApp.activationPolicy == .regular {
+                return menuBarApp
+            }
             return NSWorkspace.shared.runningApplications
                 .filter { $0.activationPolicy == .regular && !$0.isTerminated && $0.processIdentifier != currentPID }
                 .first
         }()
+
+        // Deactivate Clippy first so the target app can claim key focus
+        NSApp.deactivate()
 
         if let appToActivate {
             print("ClipboardWriter: Activating target application for direct paste: \(appToActivate.localizedName ?? "\(appToActivate.processIdentifier)")")
@@ -175,15 +182,43 @@ enum ClipboardWriter {
             }
             appToActivate.activate(options: .activateIgnoringOtherApps)
         }
-        NSApp.deactivate()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            simulatePasteKeystroke()
+            let frontmost = NSWorkspace.shared.frontmostApplication
+            // CRITICAL SAFEGUARD: Never simulate paste keystroke if Clippy itself is frontmost!
+            if let frontmost, frontmost.processIdentifier == currentPID {
+                if let appToActivate, !appToActivate.isTerminated {
+                    if #available(macOS 14.0, *) {
+                        NSApp.yieldActivation(to: appToActivate)
+                    }
+                    appToActivate.activate(options: .activateIgnoringOtherApps)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                        guard NSWorkspace.shared.frontmostApplication?.processIdentifier != currentPID else {
+                            print("ClipboardWriter: Target app failed to become frontmost, aborting paste keystroke to protect Clippy search bar")
+                            return
+                        }
+                        simulatePasteKeystroke(targetPID: appToActivate.processIdentifier)
+                    }
+                    return
+                } else {
+                    print("ClipboardWriter: No target app found to activate, aborting paste keystroke")
+                    return
+                }
+            }
+
+            simulatePasteKeystroke(targetPID: appToActivate?.processIdentifier)
         }
     }
 
     /// Simulates the ⌘V keyboard shortcut using `CGEvent`.
-    static func simulatePasteKeystroke() {
+    static func simulatePasteKeystroke(targetPID: pid_t? = nil) {
+        let currentPID = NSRunningApplication.current.processIdentifier
+        // Extra safeguard: under no circumstances simulate paste if Clippy is frontmost
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier == currentPID {
+            print("ClipboardWriter: Aborting simulatePasteKeystroke because Clippy is frontmost")
+            return
+        }
+
         guard let source = CGEventSource(stateID: .combinedSessionState) else { return }
 
         // Disable local keyboard events while pasting to avoid modifier interference
@@ -205,9 +240,14 @@ enum ClipboardWriter {
         keyDown.flags = cmdFlag
         keyUp.flags = cmdFlag
 
-        // Post once to .cgSessionEventTap so it reaches the session's active window/responder
-        keyDown.post(tap: .cgSessionEventTap)
-        keyUp.post(tap: .cgSessionEventTap)
+        // Post directly to target app process ID so event is delivered strictly to target
+        if let targetPID, targetPID != currentPID {
+            keyDown.postToPid(targetPID)
+            keyUp.postToPid(targetPID)
+        } else {
+            keyDown.post(tap: .cgSessionEventTap)
+            keyUp.post(tap: .cgSessionEventTap)
+        }
     }
 }
 

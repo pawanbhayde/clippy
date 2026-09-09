@@ -51,6 +51,7 @@ struct ClipboardGrid: View {
                                     isMultiSelectActive: !multiSelectedIDs.isEmpty,
                                     onActivate: { activatedItem in
                                         store.activate(activatedItem)
+                                        store.searchQuery = ""
                                         onCopied?(activatedItem)
                                     },
                                     onToggleSelect: { itemToToggle in
