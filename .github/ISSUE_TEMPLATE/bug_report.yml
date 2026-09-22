@@ -1,0 +1,53 @@
+name: Bug report
+description: Report something that's broken in Clippy
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please don't use this form for security vulnerabilities — see [SECURITY.md](../../blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 15.1 (Sequoia)
+    validations:
+      required: true
+  - type: input
+    id: mac-model
+    attributes:
+      label: Mac model
+      description: Whether your Mac has a physical camera notch affects shelf geometry/animation bugs.
+      placeholder: e.g. MacBook Pro 14" M3 (has notch) / Mac mini M2 + external monitor (no notch)
+    validations:
+      required: true
+  - type: input
+    id: clippy-version
+    attributes:
+      label: Clippy version or commit
+      placeholder: e.g. v1.2.0, or a commit hash if built from source
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Console.app logs (filter by process "clippy"), crash reports from `~/Library/Logs/DiagnosticReports`, or screenshots/screen recordings.

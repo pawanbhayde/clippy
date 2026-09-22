@@ -211,7 +211,7 @@ Clippy comes with a one-step script to build a clean Release binary and package 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/clippy.git
+git clone https://github.com/pawanbhayde/clippy.git
 cd clippy
 
 # Run the automated DMG packaging script
