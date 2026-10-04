@@ -44,9 +44,6 @@ export function PastoralCtaFooter() {
           >
             <GithubIcon className="w-4 h-4 transition-transform group-hover:scale-110" />
             <span>View on GitHub</span>
-            <span className="text-[11px] font-normal text-[#C5BDB0] pl-1.5 border-l border-[#4A453F]">
-              ★ 1.4k • Open Source
-            </span>
           </a>
 
           <a

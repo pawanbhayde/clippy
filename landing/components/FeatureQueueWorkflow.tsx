@@ -73,7 +73,7 @@ export function FeatureQueueWorkflow() {
   ];
 
   return (
-    <section id="paste-queue" className="py-20 sm:py-28 relative overflow-hidden">
+    <section id="paste-queue" className="py-20 sm:py-28 relative overflow-hidden scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">

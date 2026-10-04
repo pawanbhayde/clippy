@@ -18,7 +18,7 @@ export function PrivacySecuritySection() {
   const [revealed, setRevealed] = useState(false);
 
   return (
-    <section id="security" className="py-20 sm:py-28 relative overflow-hidden">
+    <section id="security" className="py-20 sm:py-28 relative overflow-hidden scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Vintage Bee Emblem / Mascot Crest */}
         <div className="flex justify-center mb-6">

@@ -48,7 +48,7 @@ export function FeatureCardsGrid() {
   };
 
   return (
-    <section id="features" className="py-16 sm:py-24 relative overflow-hidden">
+    <section id="features" className="py-16 sm:py-24 relative overflow-hidden scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Warm Linen & Parchment Styled Section Container */}
         <div className="rounded-3xl bg-gradient-to-b from-[#F5EFE6] to-[#EFE8DC] p-8 sm:p-14 lg:p-16 border border-[#DDD5C5] shadow-paper-lg relative overflow-hidden">
@@ -142,7 +142,10 @@ export function FeatureCardsGrid() {
             {/* ══════════════════════════════════════════════════════════
                 CARD 2: Native Apple Vision OCR
                 ══════════════════════════════════════════════════════════ */}
-            <div className="rounded-2xl bg-white p-6 sm:p-7 border border-[#E5DFD4] shadow-paper flex flex-col justify-between hover:shadow-paper-lg transition-all group">
+            <div
+              id="vision-ocr"
+              className="scroll-mt-28 rounded-2xl bg-white p-6 sm:p-7 border border-[#E5DFD4] shadow-paper flex flex-col justify-between hover:shadow-paper-lg transition-all group"
+            >
               <div>
                 <div className="w-10 h-10 rounded-xl bg-[#F2EDE2] border border-[#DDD5C5] text-[#2C2825] flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
                   <ScanText className="w-5 h-5" />
