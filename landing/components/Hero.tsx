@@ -102,25 +102,7 @@ export function Hero() {
           >
             <GithubIcon className="w-4 h-4 fill-current transition-transform group-hover:scale-110" />
             <span>View on GitHub</span>
-            <span className="text-[11px] font-normal text-[#C5BDB0] pl-1 border-l border-[#4A453F]">
-              ★ 1.4k • Open Source
-            </span>
           </a>
-
-          <button
-            onClick={handleCopyBrew}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-full text-xs font-mono font-medium text-[#2C2825] bg-[#F2EDE2] border border-[#DDD5C5] hover:bg-[#EAE2D2] hover:border-[#CCC1AD] transition-all shadow-2xs group"
-          >
-            <Terminal className="w-3.5 h-3.5 text-[#635C52]" />
-            <span>brew install clippy</span>
-            {copiedBrew ? (
-              <span className="text-emerald-700 font-sans font-semibold text-[11px] flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" /> Copied!
-              </span>
-            ) : (
-              <Copy className="w-3.5 h-3.5 text-[#8A8172] group-hover:text-[#2C2825] transition-colors" />
-            )}
-          </button>
         </div>
 
         {/* ══════════════════════════════════════════════════════════════

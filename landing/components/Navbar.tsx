@@ -19,11 +19,10 @@ export function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#FAF7F2]/90 backdrop-blur-md border-b border-[#E8E2D6] py-3 shadow-xs"
-          : "bg-transparent py-5"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+        ? "bg-[#FAF7F2]/90 backdrop-blur-md border-b border-[#E8E2D6] py-3 shadow-xs"
+        : "bg-transparent py-5"
+        }`}
     >
       <div className="max-w-6xl mx-auto px-6 flex items-center justify-between">
         {/* Brand */}
@@ -43,9 +42,6 @@ export function Navbar() {
           <div className="flex items-baseline gap-2">
             <span className="font-serif text-2xl font-bold tracking-tight text-[#2C2825]">
               Clippy
-            </span>
-            <span className="hidden sm:inline-block text-[11px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#EAE3D5] text-[#5C5549] border border-[#DDD5C5]">
-              v1.0 • macOS
             </span>
           </div>
         </a>
@@ -97,9 +93,6 @@ export function Navbar() {
           >
             <GithubIcon className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
             <span>GitHub</span>
-            <span className="text-[10px] text-[#D8CEBF] bg-[#3E3A36] px-2 py-0.5 rounded-full font-mono">
-              ★ 1.4k
-            </span>
           </a>
         </div>
 
