@@ -38,12 +38,13 @@
   - [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
   - [🔎 Search Operators Syntax](#-search-operators-syntax)
   - [🛡️ Privacy \& Security First](#️-privacy--security-first)
-  - [📦 Installation \& Building from Source](#-installation--building-from-source)
-    - [Prerequisites](#prerequisites)
-    - [Generate DMG Package](#generate-dmg-package)
-    - [Build with Xcode](#build-with-xcode)
-    - [Accessibility Permissions](#accessibility-permissions)
-  - [🏛 Architecture \& Tech Stack](#-architecture--tech-stack)
+  - [📦 Installation & Setup](#-installation--setup)
+    - [Method 1: Download Pre-built Release (Recommended)](#method-1-download-pre-built-release-recommended)
+    - [Method 2: Install via Homebrew](#method-2-install-via-homebrew)
+    - [Method 3: Build & Package DMG from Source (CLI)](#method-3-build--package-dmg-from-source-cli)
+    - [Method 4: Build & Run with Xcode (For Contributors)](#method-4-build--run-with-xcode-for-contributors)
+    - [Essential Post-Installation Permissions](#-essential-post-installation-permissions)
+  - [🏛 Architecture & Tech Stack](#-architecture--tech-stack)
 
 ---
 
@@ -196,51 +197,92 @@ Clippy is built with an uncompromising commitment to privacy:
 
 ---
 
-## 📦 Installation & Building from Source
+## 📦 Installation & Setup
 
-### Prerequisites
-- **macOS 14.0 (Sonoma)** or **macOS 15.0+ (Sequoia)**
-- **Apple Silicon (M1/M2/M3/M4)** or **Intel Mac**
-- **Xcode 15.0+** with Command Line Tools installed
+Choose your preferred installation method:
+
+### Method 1: Download Pre-built Release (Recommended)
+
+1. Go to the [**Latest GitHub Releases**](https://github.com/pawanbhayde/clippy/releases/latest) and download **`Clippy.dmg`**.
+2. Double-click **`Clippy.dmg`** to open it.
+3. Drag **`Clippy.app`** into your **`/Applications`** folder.
+4. Launch **Clippy** from Spotlight (`⌘ Space` > type "Clippy") or your Applications folder.
+
+> [!NOTE]
+> **macOS Gatekeeper First-Launch Note**:  
+> Because Clippy is open-source and distributed directly without Apple Developer paid notarization, macOS may show: *"Clippy cannot be opened because Apple cannot check it for malicious software"*.
+> - **Quick Terminal command**:
+>   ```bash
+>   xattr -cr /Applications/Clippy.app
+>   ```
+> - **Or GUI method**: Right-click (Control-click) `Clippy.app` in `/Applications` > click **Open** > click **Open** again on the confirmation alert.
 
 ---
 
-### Generate DMG Package
-
-Clippy comes with a one-step script to build a clean Release binary and package it into a compressed `.dmg` file ready for installation:
+### Method 2: Install via Homebrew
 
 ```bash
-# Clone the repository
+brew install --cask clippy
+```
+
+Or via the official tap:
+```bash
+brew tap pawanbhayde/clippy
+brew install clippy
+```
+
+---
+
+### Method 3: Build & Package DMG from Source (CLI)
+
+You can compile a production Release binary and package a standalone `.dmg` installer with one command:
+
+#### Prerequisites
+- **macOS 14.0 (Sonoma)** or **macOS 15.0+ (Sequoia)**
+- **Apple Silicon (M1/M2/M3/M4)** or **Intel Mac**
+- **Xcode 15.0+** with Command Line Tools (`xcode-select --install`)
+
+```bash
+# 1. Clone the repository
 git clone https://github.com/pawanbhayde/clippy.git
 cd clippy
 
-# Run the automated DMG packaging script
+# 2. Run the automated Release build and packaging script
 chmod +x scripts/build_dmg.sh
 ./scripts/build_dmg.sh
+
+# 3. Mount DMG and install
+open Clippy.dmg
 ```
 
-Upon completion, `Clippy.dmg` is generated in the project root directory. Double-click `Clippy.dmg` and drag **Clippy.app** into your `/Applications` folder!
+Upon completion, `Clippy.dmg` is generated in the project root directory.
 
 ---
 
-### Build with Xcode
+### Method 4: Build & Run with Xcode (For Contributors)
 
 1. Open `clippy.xcodeproj` in Xcode:
    ```bash
    open clippy.xcodeproj
    ```
-2. Select the `clippy` scheme and your Mac as the destination.
-3. Press **`⌘ B`** to build or **`⌘ R`** to run.
+2. In the top toolbar, select the **`clippy`** scheme.
+3. Choose your destination as **My Mac**.
+4. Press **`⌘ B`** to build or **`⌘ R`** to run in Debug mode.
+   *(Dependencies like `KeyboardShortcuts` and `LaunchAtLogin-Modern` are managed via Swift Package Manager and resolve automatically).*
 
 ---
 
-### Accessibility Permissions
+### 🔑 Essential Post-Installation Permissions
 
-To enable **Direct Paste** (automatically pasting selected items directly into your active application), macOS requires the Accessibility permission:
-1. Open **System Settings > Privacy & Security > Accessibility**.
-2. Enable **Clippy**.
+To enable Clippy's core superpower—**Direct Paste Injection** (automatically pasting selected items directly into Xcode, VS Code, Slack, Chrome, or Terminal without extra keystrokes)—macOS requires the Accessibility permission:
 
-*(Clippy will automatically prompt you with an onboarding guide on first launch).*
+1. Open **System Settings** (`⌘ Space` > type "System Settings").
+2. Navigate to **Privacy & Security** > **Accessibility**.
+3. Toggle the switch next to **Clippy** to **On**.
+4. *(Clippy also includes a guided onboarding sheet on first launch with a direct link).*
+
+> [!TIP]
+> **Launch at Login**: To have Clippy live in your notch whenever you boot your Mac, open Clippy Preferences (**`⌘ ,`**) and check **Launch at Login**.
 
 ---
 

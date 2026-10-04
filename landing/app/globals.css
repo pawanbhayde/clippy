@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FAF7F2;
+  --foreground: #2C2825;
+  --font-serif: var(--font-newsreader), "Newsreader", "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+@theme {
+  --font-serif: var(--font-newsreader), "Newsreader", "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background-color: #FAF7F2;
+  color: #2C2825;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+/* Custom subtle paper shadows matching the editorial aesthetic */
+.shadow-paper {
+  box-shadow: 0 4px 20px -2px rgba(44, 40, 37, 0.06), 0 2px 6px -1px rgba(44, 40, 37, 0.04);
+}
+
+.shadow-paper-lg {
+  box-shadow: 0 20px 40px -4px rgba(44, 40, 37, 0.09), 0 8px 16px -2px rgba(44, 40, 37, 0.05);
+}
+
+.shadow-paper-xl {
+  box-shadow: 0 25px 60px -8px rgba(44, 40, 37, 0.12), 0 12px 24px -4px rgba(44, 40, 37, 0.06);
+}
+
+/* Glassmorphism for macOS UI mockup */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-dark-notch {
+  background: rgba(18, 18, 20, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Dynamic Island notch curve geometry */
+.notch-capsule {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+/* Animated grain texture / noise overlay if desired */
+.bg-warm-grain {
+  background-color: #FAF7F2;
+  background-image: radial-gradient(rgba(44, 40, 37, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
