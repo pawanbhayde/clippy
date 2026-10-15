@@ -7,7 +7,7 @@ Thanks for your interest in improving Clippy! This document covers everything yo
 This repo contains two independent projects:
 
 - **`clippy/`** — the macOS app (Swift, AppKit + SwiftUI). This is the main project.
-- **`landing-page/`** — the marketing site (Next.js). Independent tooling and conventions; see `landing-page/README.md`.
+- **`landing-page/`** — the marketing site (Astro + React + Tailwind CSS). Independent tooling and conventions; see `landing-page/README.md`.
 
 For an architecture overview of the macOS app (capture pipeline, storage layout, feature module conventions), read [`CLAUDE.md`](CLAUDE.md) — it's written for AI coding assistants but is equally useful as a map of the codebase for human contributors.
 

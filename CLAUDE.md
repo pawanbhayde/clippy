@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Clippy is a native macOS clipboard manager built as a Dynamic Island / notch-anchored shelf (100% Swift, AppKit + SwiftUI, no Electron/web wrapper). It runs as a menu-bar accessory app (`NSApp.setActivationPolicy(.accessory)`), monitors the system pasteboard, classifies/persists items to disk, and exposes them through a floating notch-shaped panel with search, merge, diff, OCR, and paste-queue features. See `README.md` for the full user-facing feature list.
 
-The repo also contains `landing-page/` — a separate Next.js marketing site with its own `CLAUDE.md`/`AGENTS.md` (it points at `node_modules/next/dist/docs/` because it pins a bleeding-edge Next.js build with breaking API changes vs. training data). Treat it as an independent project; don't mix its conventions into the Swift app.
+The repo also contains `landing-page/` — a separate Astro marketing site (Astro + React + Tailwind CSS v4 on Cloudflare Workers). Treat it as an independent project; don't mix its conventions into the Swift app.
 
 ## Build & run
 

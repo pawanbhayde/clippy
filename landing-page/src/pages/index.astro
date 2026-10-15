@@ -1,0 +1,1232 @@
+---
+import Layout from '@/layouts/Layout.astro';
+---
+
+<Layout>
+  <!-- ══════════════════════════════════════════════════════════════
+       HERO — FULL RED/SCARLET ACCENT VIEWPORT
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <header class="site-header" role="banner">
+      <nav class="site-nav" aria-label="Main navigation">
+        <a href="/" class="site-logo" aria-label="Clippy Home">
+          <img src="/icon.png" alt="Clippy" width="28" height="28" class="rounded-md border border-black/20" />
+          <span>CLIPPY</span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-8 font-mono text-xs uppercase font-bold tracking-wider text-black/80">
+          <a href="#the-problem" class="hover:text-black transition-colors">The Problem</a>
+          <a href="#intro-clippy" class="hover:text-black transition-colors">The Notch</a>
+          <a href="#difference" class="hover:text-black transition-colors">Architecture</a>
+          <a href="#how-it-works" class="hover:text-black transition-colors">How It Works</a>
+          <a href="#faq" class="hover:text-black transition-colors">FAQ</a>
+        </div>
+
+        <a
+          href="https://github.com/pawanbhayde/clippy"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-chamfer btn-dark site-nav-cta"
+          id="nav-join-btn"
+        >
+          View on GitHub ↗
+        </a>
+      </nav>
+    </header>
+
+    <!-- Hero watermark (Stylized Precision Dynamic Island & Notch Wireframe) -->
+    <svg
+      class="hero-watermark"
+      viewBox="0 0 400 240"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect x="20" y="20" width="360" height="200" rx="36" stroke="currentColor" stroke-width="3" stroke-dasharray="6 6" />
+      <path d="M120 20 H280 V60 C280 76 268 88 252 88 H148 C132 88 120 76 120 60 Z" fill="currentColor" opacity="0.3" />
+      <circle cx="200" cy="54" r="10" fill="currentColor" />
+      <rect x="70" y="120" width="260" height="64" rx="16" stroke="currentColor" stroke-width="2" />
+      <path d="M100 152 H160 M180 152 H240 M260 152 H300" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+    </svg>
+
+    <div class="hero-content">
+      <div class="inline-flex items-center gap-2 px-3 py-1 bg-black/10 border border-black/20 font-mono text-xs uppercase font-bold tracking-widest text-black/80 mb-2">
+        <span class="w-2 h-2 rounded-full bg-black animate-pulse"></span>
+        <span>macOS Sonoma 14+ & Sequoia 15+ • 100% Native Swift</span>
+      </div>
+
+      <h1 class="display">
+        Turn Your Notch<br />
+        Into A Superpower
+      </h1>
+
+      <p class="hero-sub">
+        The open-source, 100% native macOS clipboard manager living directly inside your MacBook camera bezel. Sequential paste queues, Apple Vision OCR, and multi-clip merging—all on-device and privacy-first.
+      </p>
+
+      <div class="hero-actions">
+        <a
+          href="https://github.com/pawanbhayde/clippy"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-chamfer btn-dark"
+          id="hero-github-btn"
+        >
+          <svg class="w-4 h-4 fill-current inline-block mr-1" viewBox="0 0 24 24">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"></path>
+          </svg>
+          <span>View on GitHub</span>
+          <span class="opacity-70 font-normal">★ 1.4k</span>
+        </a>
+
+        <button
+          type="button"
+          class="btn-chamfer btn-dark"
+          id="hero-clone-btn"
+          onclick="navigator.clipboard.writeText('git clone https://github.com/pawanbhayde/clippy.git && cd clippy && open clippy.xcodeproj'); const el = document.getElementById('hero-clone-text'); el.innerText = 'Copied Clone Command!'; setTimeout(() => el.innerText = 'git clone ... clippy.xcodeproj', 2200);"
+        >
+          <span class="opacity-60 font-mono">$</span>
+          <span id="hero-clone-text">git clone ... clippy.xcodeproj</span>
+        </button>
+
+        <a
+          href="#specs"
+          class="btn-chamfer btn-dark"
+        >
+          <span>Build Instructions</span>
+          <span class="opacity-60">↓</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- News & Feature Ticker Tape Marquee -->
+    <div class="hero-ticker" aria-label="Clippy announcements">
+      <div class="hero-ticker-inner">
+        <div class="hero-ticker-group">
+          <span>Clippy v1.0 Released for macOS Sonoma & Sequoia</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>100% Native Swift, AppKit & SwiftUI</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Zero Telemetry • Zero Network Entitlements Verified</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Sequential FIFO Paste Queue (⌘⌥V)</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Hardware-Accelerated Apple Vision OCR</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Instant Multi-Item Merger with SQL, CSV & Markdown</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Keychain AES-256-GCM Hardware Encryption</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Side-by-Side Visual Myers Diff Engine</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+        </div>
+        <div class="hero-ticker-group" aria-hidden="true">
+          <span>Clippy v1.0 Released for macOS Sonoma & Sequoia</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>100% Native Swift, AppKit & SwiftUI</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Zero Telemetry • Zero Network Entitlements Verified</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Sequential FIFO Paste Queue (⌘⌥V)</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Hardware-Accelerated Apple Vision OCR</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Instant Multi-Item Merger with SQL, CSV & Markdown</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Keychain AES-256-GCM Hardware Encryption</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+          <span>Side-by-Side Visual Myers Diff Engine</span>
+          <span class="hero-ticker-separator" aria-hidden="true">&bull;</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Script for Ticker Duration Calculation -->
+  <script is:inline>
+    document.querySelectorAll(".hero-ticker-inner").forEach((r) => {
+      const e = r.querySelector(".hero-ticker-group");
+      if (!e) return;
+      const o = () => {
+        r.style.setProperty("--ticker-duration", `${e.getBoundingClientRect().width / 38}s`);
+      };
+      o();
+      new ResizeObserver(o).observe(e);
+    });
+  </script>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION 1: THE PROBLEM (Numbered 3-Column Technical Grid)
+       ══════════════════════════════════════════════════════════════ -->
+  <main class="content">
+    <div style="padding-bottom: 4rem;">
+      <div class="section-divider" style="position: relative; top: 4rem;"></div>
+    </div>
+
+    <section class="signal-section problem-section" id="the-problem">
+      <div class="container problem-container">
+        <div class="problem-outer">
+          <!-- TOP: Badge + Headline -->
+          <div class="problem-top">
+            <div class="badge problem-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M 11 11 L 13 11 L 13 13 L 11 13 Z M 15 7 L 17 7 L 17 9 L 15 9 Z M 7 7 L 9 7 L 9 9 L 7 9 Z M 7 15 L 9 15 L 9 17 L 7 17 Z M 15 15 L 17 15 L 17 17 L 15 17 Z M 5 17 L 7 17 L 7 19 L 5 19 Z M 5 5 L 7 5 L 7 7 L 5 7 Z M 9 13 L 11 13 L 11 15 L 9 15 Z M 13 13 L 15 13 L 15 15 L 13 15 Z M 13 9 L 15 9 L 15 11 L 13 11 Z M 9 9 L 11 9 L 11 11 L 9 11 Z M 17 5 L 19 5 L 19 7 L 17 7 Z M 17 17 L 19 17 L 19 19 L 17 19 Z" fill="var(--primary)"></path>
+              </svg>
+              The Bottleneck
+            </div>
+            <h2 class="display problem-headline">The Standard Clipboard is Stuck in 1984</h2>
+          </div>
+
+          <div class="problem-divider"></div>
+
+          <!-- BOTTOM: 3-column grid (SVG flow illustration + 2x2 cards) -->
+          <div class="problem-grid">
+            <!-- Left: Looping review checkpoint -->
+            <div class="problem-checkpoint-col">
+              <svg viewBox="0 0 380 440" fill="none" class="w-full h-auto max-w-[340px]" role="img">
+                <rect x="20" y="20" width="340" height="400" rx="8" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4" />
+                
+                <!-- Notch Anchor Schematic -->
+                <path d="M120 20 H260 V56 C260 68 250 78 238 78 H142 C130 78 120 68 120 56 Z" fill="rgba(237, 70, 45, 0.15)" stroke="var(--primary)" stroke-width="1.5" />
+                <circle cx="190" cy="48" r="6" fill="var(--primary)" />
+                <text x="190" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--primary)" letter-spacing="1">CAMERA NOTCH</text>
+
+                <!-- Flow arrows -->
+                <path d="M190 85 V125" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="3 3" />
+                <path d="M186 120 L190 126 L194 120" stroke="var(--primary)" stroke-width="1.5" />
+
+                <!-- Card 1: Copy Stream -->
+                <g transform="translate(60, 130)">
+                  <rect width="260" height="52" rx="4" fill="#12141c" stroke="var(--border)" />
+                  <rect x="12" y="14" width="24" height="24" rx="4" fill="rgba(240, 237, 230, 0.08)" />
+                  <text x="24" y="30" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="var(--paper)">⌘C</text>
+                  <text x="48" y="26" font-family="var(--font-mono)" font-size="11" font-weight="bold" fill="var(--paper)">auth_token_prod_98a</text>
+                  <text x="48" y="40" font-family="var(--font-mono)" font-size="9" fill="var(--paper-dim)">Overwrites previous clipboard buffer</text>
+                </g>
+
+                <path d="M190 185 V225" stroke="var(--primary)" stroke-width="1.5" />
+                <path d="M186 220 L190 226 L194 220" stroke="var(--primary)" stroke-width="1.5" />
+
+                <!-- Card 2: Rework / Loss -->
+                <g transform="translate(60, 230)">
+                  <rect width="260" height="52" rx="4" fill="rgba(237, 70, 45, 0.08)" stroke="rgba(237, 70, 45, 0.3)" />
+                  <rect x="12" y="14" width="24" height="24" rx="4" fill="rgba(237, 70, 45, 0.2)" />
+                  <text x="24" y="30" text-anchor="middle" font-family="var(--font-mono)" font-size="11" fill="var(--primary)">!</text>
+                  <text x="48" y="26" font-family="var(--font-mono)" font-size="11" font-weight="bold" fill="var(--primary)">Context Destruction</text>
+                  <text x="48" y="40" font-family="var(--font-mono)" font-size="9" fill="var(--paper-dim)">Forced to tab back 4 times to find old snippet</text>
+                </g>
+
+                <path d="M190 285 V325" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="3 3" />
+                <path d="M186 320 L190 326 L194 320" stroke="var(--border)" stroke-width="1.5" />
+
+                <!-- Result Status -->
+                <g transform="translate(60, 330)">
+                  <rect width="260" height="56" rx="4" fill="#08090c" stroke="var(--border)" />
+                  <circle cx="28" cy="28" r="8" fill="rgba(253, 224, 71, 0.2)" />
+                  <text x="28" y="32" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="#fde047">⚠</text>
+                  <text x="48" y="26" font-family="var(--font-mono)" font-size="11" font-weight="bold" fill="var(--paper)">24 mins lost per day</text>
+                  <text x="48" y="42" font-family="var(--font-mono)" font-size="9" fill="var(--paper-35)">Continuous cognitive context switching</text>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Top-middle: Destructive Overwrite -->
+            <div class="problem-card">
+              <div class="problem-card-header">
+                <span class="mono problem-card-label">Destruction</span>
+                <span class="mono problem-card-number">001</span>
+              </div>
+              <h3 class="display-heavy">Accidental Overwrites</h3>
+              <p>One inadvertent ⌘C completely obliterates your copied database credentials, API response, or design specs from 5 seconds ago.</p>
+            </div>
+
+            <!-- Top-right: Tab Shuffle -->
+            <div class="problem-card">
+              <div class="problem-card-header">
+                <span class="mono problem-card-label">Latency</span>
+                <span class="mono problem-card-number">002</span>
+              </div>
+              <h3 class="display-heavy">Exhausting Tab Shuffling</h3>
+              <p>Filling out multiple forms or copying 4 values from Linear into code forces 8 round-trip window switches and constant mental interruption.</p>
+            </div>
+
+            <!-- Bottom-middle: Cloud Privacy Risks -->
+            <div class="problem-card">
+              <div class="problem-card-header">
+                <span class="mono problem-card-label">Privacy</span>
+                <span class="mono problem-card-number">003</span>
+              </div>
+              <h3 class="display-heavy">Cloud Telemetry Exposure</h3>
+              <p>Commercial clipboard managers upload your clipboard history—including passwords and private keys—to third-party remote analytics servers.</p>
+            </div>
+
+            <!-- Bottom-right: Screenshot Bloat -->
+            <div class="problem-card">
+              <div class="problem-card-header">
+                <span class="mono problem-card-label">Friction</span>
+                <span class="mono problem-card-number">004</span>
+              </div>
+              <h3 class="display-heavy">Screenshot Graveyards</h3>
+              <p>Your Desktop gets cluttered with dozens of throwaway screenshots just to transcribe text from an image or video frame.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 2: INTRODUCING CLIPPY (Interactive Walkthrough / Loop)
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="offline-section" id="intro-clippy">
+      <div class="container">
+        <div class="intro-headline-wrap">
+          <div class="badge">Introducing Clippy</div>
+          <h2 class="display intro-title">
+            Spatial Clipboard<br />
+            Inside Your Notch
+          </h2>
+          <p class="intro-desc">
+            Clippy lives directly in the hardware bezel of your MacBook display. Hover to drop down the shelf, queue sequential clips with ⌘⌥V, and extract text with Apple Vision OCR.
+          </p>
+        </div>
+
+        <div class="walkthrough" id="clippy-walkthrough" data-step="0" data-playing="false">
+          <!-- Left: Simulated Product Demo Terminal / Editor -->
+          <figure class="product-demo" aria-label="Interactive Clippy feature simulator">
+            <figcaption>
+              <span class="demo-dot"></span>
+              <span>macOS • Clippy Dynamic Island Shelf</span>
+            </figcaption>
+
+            <div class="editor-bar">
+              <span class="file-tab">⌘ &nbsp; shelf.notch.swift</span>
+              <span class="file-status">100% On-Device</span>
+            </div>
+
+            <!-- Interactive Code / Mockup Editor Bar -->
+            <div class="code-editor">
+              <div class="code-line">
+                <span>01</span>
+                <code><b>import</b> SwiftUI</code>
+              </div>
+              <div class="code-line">
+                <span>02</span>
+                <code><b>import</b> Vision</code>
+              </div>
+              <div class="code-line">
+                <span>03</span>
+                <code><b class="text-[#f87171]">@NotchShelf</b> <b>struct</b> ClipboardQueue &#123;</code>
+              </div>
+              <div class="code-line" id="dynamic-code-line">
+                <span>04</span>
+                <code id="step-code-preview">  <b>let</b> activeMode = <em>"Sequential FIFO Queue (⌘⌥V)"</em>;</code>
+              </div>
+              <div class="code-line">
+                <span>05</span>
+                <code>&#125;</code>
+              </div>
+
+              <div class="code-note">
+                <span class="note-before" id="note-state">+ Notch Anchor: Active</span>
+                <span class="note-after" id="note-mode">Mode: Queue (3 items buffered)</span>
+              </div>
+            </div>
+
+            <!-- Interactive Visual Preview Scenes -->
+            <div class="demo-conversation">
+              <div class="chat-header">
+                <span class="agent-avatar">⌘</span>
+                <span>Active Island Preview</span>
+                <span class="text-xs font-mono text-zinc-500 ml-auto" id="active-scene-badge">SCENE 01 / NOTCH</span>
+              </div>
+
+              <div class="chat-thread" id="walkthrough-thread">
+                <!-- Scene 0: Notch Shelf Preview -->
+                <div class="demo-scene" data-scene="0">
+                  <div class="user-message">
+                    <span>Action</span>
+                    <p class="font-mono text-xs">Hover cursor over top camera notch</p>
+                  </div>
+                  <div class="assistant-message">
+                    <span class="message-author">Clippy Shelf</span>
+                    <p>Dynamic Island drops down instantly with live spring physics. Shows recent clipboard items, search bar with tokens (<code class="bg-black/40 px-1 py-0.5 rounded">app:xcode</code>), and quick-look preview.</p>
+                  </div>
+                  <div class="tool-message">
+                    <div class="tool-heading">
+                      <span class="text-amber-400">●</span>
+                      <span>Hardware Notch Anchor</span>
+                      <span class="tool-state running">ProMotion 120Hz</span>
+                    </div>
+                    <div class="tool-body font-mono text-xs">
+                      Window ID: 0x24a | Bounds: (x: 648, y: 0, w: 216, h: 44) | Latency: 0.2ms
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene 1: Sequential FIFO Queue -->
+                <div class="demo-scene" data-scene="1" hidden>
+                  <div class="user-message">
+                    <span>Shortcut</span>
+                    <p class="font-mono text-xs">Press ⌘⌥V to paste sequentially</p>
+                  </div>
+                  <div class="assistant-message">
+                    <span class="message-author">Queue Processor</span>
+                    <p>Popped item 1 of 4: <code class="text-emerald-400 font-mono">auth_token_eyJhbGciOi...</code> into active editor. Remaining: 3 items in queue.</p>
+                  </div>
+                  <div class="tool-message">
+                    <div class="tool-heading">
+                      <span class="text-emerald-400">✓</span>
+                      <span>Sequential FIFO Buffer</span>
+                      <span class="tool-state passed">Auto-Advancing</span>
+                    </div>
+                    <div class="tool-body font-mono text-xs">
+                      Queue: [Client Name] → [Email] → [API Key] → [DB Host]
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene 2: Apple Vision OCR -->
+                <div class="demo-scene" data-scene="2" hidden>
+                  <div class="user-message">
+                    <span>Trigger</span>
+                    <p class="font-mono text-xs">Screenshot or image copied to clipboard</p>
+                  </div>
+                  <div class="assistant-message">
+                    <span class="message-author">VNRecognizeTextRequest</span>
+                    <p>Extracted 14 lines of formatted Swift code from screenshot in 18ms. Text copied directly to clipboard buffer with zero cloud upload.</p>
+                  </div>
+                  <div class="tool-message">
+                    <div class="tool-heading">
+                      <span class="text-sky-400">●</span>
+                      <span>Apple Vision Framework</span>
+                      <span class="tool-state passed">100% Offline</span>
+                    </div>
+                    <div class="tool-body font-mono text-xs">
+                      Neural Engine accelerated | Confidence: 99.4% | Network: Disconnected
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Scene 3: Multi-Item Merger & Diff -->
+                <div class="demo-scene" data-scene="3" hidden>
+                  <div class="user-message">
+                    <span>Selection</span>
+                    <p class="font-mono text-xs">⌘-Click 3 clips → Merge as SQL Clause</p>
+                  </div>
+                  <div class="assistant-message">
+                    <span class="message-author">Merger Engine</span>
+                    <p>Synthesized 3 clips into SQL: <code class="text-yellow-400 font-mono">IN ('user_102', 'user_409', 'user_881')</code>. Ready to paste.</p>
+                  </div>
+                  <div class="tool-message">
+                    <div class="tool-heading">
+                      <span class="text-emerald-400">✓</span>
+                      <span>Visual Myers Diff</span>
+                      <span class="tool-state passed">Zero Conflicts</span>
+                    </div>
+                    <div class="tool-body font-mono text-xs">
+                      Line diff: 4 additions (+), 1 deletion (-) | Patch copied
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="demo-footer">
+              <span class="local-dot"></span>
+              <span>LOCAL WORKSPACE</span>
+              <span class="ml-auto text-zinc-500 font-mono">NATIVE SWIFT 6.0</span>
+            </div>
+          </figure>
+
+          <!-- Right: Step Descriptions and Controls -->
+          <div class="walkthrough-copy">
+            <div class="step-copy-stack" id="clippy-step-description">
+              <!-- Step 0 -->
+              <div class="step-copy" data-copy="0">
+                <div class="step-heading">
+                  <span class="step-kicker">THE NOTCH / 01</span>
+                  <h3>Spatial Shelf at Your Cursor</h3>
+                </div>
+                <p>
+                  Clippy hugs the MacBook display camera housing. Hovering over the notch gently drops down the shelf. Drag files into the notch to hold them while switching across macOS Spaces.
+                </p>
+              </div>
+
+              <!-- Step 1 -->
+              <div class="step-copy" data-copy="1" hidden>
+                <div class="step-heading">
+                  <span class="step-kicker">THE QUEUE / 02</span>
+                  <h3>Sequential FIFO Pasting (⌘⌥V)</h3>
+                </div>
+                <p>
+                  Copy 5 items in sequence from Slack or Linear. Switch to your IDE and press ⌘⌥V repeatedly to pop each item into place in exact order, with zero window swapping.
+                </p>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="step-copy" data-copy="2" hidden>
+                <div class="step-heading">
+                  <span class="step-kicker">VISION OCR / 03</span>
+                  <h3>Instant Hardware OCR</h3>
+                </div>
+                <p>
+                  Copy any screenshot or drag an image into the notch. Clippy uses Apple's native Vision framework to instantly extract text offline with Apple Neural Engine acceleration.
+                </p>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="step-copy" data-copy="3" hidden>
+                <div class="step-heading">
+                  <span class="step-kicker">SYNTHESIS / 04</span>
+                  <h3>Multi-Clip Merger & Visual Diff</h3>
+                </div>
+                <p>
+                  Combine multiple clipboard fragments into formatted SQL clauses, CSV strings, or markdown lists with 1 click. Compare two code snippets side-by-side using the built-in Myers diff engine.
+                </p>
+              </div>
+            </div>
+
+            <!-- Interactive Stepper Controls -->
+            <div class="walkthrough-controls">
+              <div class="step-markers">
+                <button type="button" data-go="0" aria-current="step" aria-label="Step 1: Notch">
+                  <span>01</span>
+                  <span class="marker-label">Notch</span>
+                </button>
+                <button type="button" data-go="1" aria-label="Step 2: Queue">
+                  <span>02</span>
+                  <span class="marker-label">Queue</span>
+                </button>
+                <button type="button" data-go="2" aria-label="Step 3: Vision">
+                  <span>03</span>
+                  <span class="marker-label">Vision</span>
+                </button>
+                <button type="button" data-go="3" aria-label="Step 4: Merge">
+                  <span>04</span>
+                  <span class="marker-label">Merge</span>
+                </button>
+              </div>
+
+              <div class="transport">
+                <button type="button" id="walkthrough-prev" aria-label="Previous step">←</button>
+                <button type="button" id="walkthrough-next" aria-label="Next step">→</button>
+                <button type="button" id="walkthrough-play" data-play aria-label="Play walkthrough">
+                  Play <span aria-hidden="true">▶</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Script for Interactive Walkthrough Controller -->
+    <script is:inline>
+      (function () {
+        const root = document.getElementById("clippy-walkthrough");
+        if (!root) return;
+
+        let currentStep = 0;
+        let isPlaying = false;
+        let timer = null;
+
+        const scenes = root.querySelectorAll("[data-scene]");
+        const copies = root.querySelectorAll("[data-copy]");
+        const buttons = root.querySelectorAll("[data-go]");
+        const playBtn = document.getElementById("walkthrough-play");
+        const prevBtn = document.getElementById("walkthrough-prev");
+        const nextBtn = document.getElementById("walkthrough-next");
+        const badge = document.getElementById("active-scene-badge");
+        const codeLine = document.getElementById("step-code-preview");
+        const noteState = document.getElementById("note-state");
+        const noteMode = document.getElementById("note-mode");
+
+        const codeSnippets = [
+          '  <b>let</b> activeMode = <em>"Notch Spatial Shelf (ProMotion 120Hz)"</em>;',
+          '  <b>let</b> activeMode = <em>"Sequential FIFO Queue (⌘⌥V Active)"</em>;',
+          '  <b>let</b> activeMode = <em>"Apple Vision OCR (Neural Engine Offline)"</em>;',
+          '  <b>let</b> activeMode = <em>"Multi-Item Synthesis (SQL & Myers Diff)"</em>;',
+        ];
+
+        const titles = [
+          "SCENE 01 / NOTCH SHELF",
+          "SCENE 02 / FIFO QUEUE",
+          "SCENE 03 / VISION OCR",
+          "SCENE 04 / SYNTHESIS & DIFF",
+        ];
+
+        function setStep(step) {
+          currentStep = (step + 4) % 4;
+          root.dataset.step = currentStep;
+
+          scenes.forEach((s, idx) => {
+            s.hidden = idx !== currentStep;
+          });
+
+          copies.forEach((c, idx) => {
+            c.hidden = idx !== currentStep;
+          });
+
+          buttons.forEach((b, idx) => {
+            if (idx === currentStep) {
+              b.setAttribute("aria-current", "step");
+            } else {
+              b.removeAttribute("aria-current");
+            }
+          });
+
+          if (badge) badge.innerText = titles[currentStep];
+          if (codeLine) codeLine.innerHTML = codeSnippets[currentStep];
+          if (noteState) noteState.innerText = `+ Step 0${currentStep + 1}: Loaded`;
+          if (noteMode) noteMode.innerText = `Status: Active (${currentStep === 1 ? "FIFO ⌘⌥V" : "Ready"})`;
+        }
+
+        buttons.forEach((b) => {
+          b.addEventListener("click", () => {
+            stopPlay();
+            setStep(Number(b.dataset.go));
+          });
+        });
+
+        prevBtn?.addEventListener("click", () => {
+          stopPlay();
+          setStep(currentStep - 1);
+        });
+
+        nextBtn?.addEventListener("click", () => {
+          stopPlay();
+          setStep(currentStep + 1);
+        });
+
+        function startPlay() {
+          isPlaying = true;
+          if (playBtn) playBtn.innerHTML = 'Pause <span aria-hidden="true">Ⅱ</span>';
+          timer = setInterval(() => {
+            setStep(currentStep + 1);
+          }, 3500);
+        }
+
+        function stopPlay() {
+          isPlaying = false;
+          if (timer) clearInterval(timer);
+          if (playBtn) playBtn.innerHTML = 'Play <span aria-hidden="true">▶</span>';
+        }
+
+        playBtn?.addEventListener("click", () => {
+          if (isPlaying) {
+            stopPlay();
+          } else {
+            startPlay();
+          }
+        });
+      })();
+    </script>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 3: THE DIFFERENCE (Static History vs Active Runtime)
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="evidence-section" id="difference">
+      <div class="container">
+        <header>
+          <div class="badge">The Architecture</div>
+          <h2>
+            Generic apps store history.<br />
+            <span>Clippy executes workflows.</span>
+          </h2>
+          <p class="intro">
+            Traditional clipboard managers dump everything into an unorganized, heavy Electron database. Clippy turns your clipboard into a hardware-anchored execution stream.
+          </p>
+        </header>
+
+        <figure class="comparison">
+          <!-- Left: Traditional Clipboard -->
+          <div class="analysis-panel">
+            <div class="panel-label">
+              <span>01 / GENERIC CLIPBOARD APPS</span>
+              <span class="file-label text-red-400">Passive Storage</span>
+            </div>
+
+            <div class="code-sample">
+              <div class="text-zinc-500">// Monolithic history dump</div>
+              <div class="text-zinc-400">history.push(clipboard.readText());</div>
+              <div class="text-red-400/80">cloudSync.upload(unencryptedPayload);</div>
+              <div class="text-zinc-500">// 180MB RAM • Electron Wrapper</div>
+            </div>
+
+            <div class="panel-result">
+              <span class="result-icon potential">✕</span>
+              <div>
+                <strong>High Friction & Cloud Risk</strong>
+                <p>Manual search required for every paste. Background telemetry uploads sensitive tokens.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Clippy Notch Runtime -->
+          <div class="runtime-panel">
+            <div class="panel-label">
+              <span>02 / CLIPPY NOTCH RUNTIME</span>
+              <span class="live-label text-emerald-400">100% On-Device</span>
+            </div>
+
+            <div class="execution-path">
+              <div class="path-node">
+                <span class="node-symbol">⌥V</span>
+                <span>Queue</span>
+              </div>
+              <span class="path-link">→</span>
+              <div class="path-node">
+                <span class="node-symbol">⌘</span>
+                <span>Notch Shelf</span>
+              </div>
+              <span class="path-link">→</span>
+              <div class="path-node">
+                <span class="node-symbol sink">✓</span>
+                <span>Direct Paste</span>
+              </div>
+            </div>
+
+            <div class="panel-result">
+              <span class="result-icon confirmed">✓</span>
+              <div>
+                <strong>Zero-Click Pipeline Execution</strong>
+                <p>Sequential FIFO queue pops without leaving your active app. 18MB RAM native Swift.</p>
+              </div>
+            </div>
+          </div>
+        </figure>
+
+        <div class="evidence-points">
+          <article>
+            <span class="point-number">01</span>
+            <h3>100% Native Swift & AppKit</h3>
+            <p>Zero web wrappers. Handcrafted in pure Swift 6 with AppKit and SwiftUI for 120Hz ProMotion animations and sub-millisecond response times.</p>
+          </article>
+          <article>
+            <span class="point-number">02</span>
+            <h3>Zero Telemetry Verified</h3>
+            <p>No analytics, no network permissions, no account signups. All data remains in your local sandbox with Keychain AES-256-GCM encryption.</p>
+          </article>
+          <article>
+            <span class="point-number">03</span>
+            <h3>Apple Neural Engine OCR</h3>
+            <p>Hardware-accelerated optical character recognition via macOS Vision framework runs entirely offline directly on your M-series or Intel chip.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 4: HOW IT WORKS (Interactive Schematics & Pipeline)
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="how-section" id="how-it-works">
+      <div class="container">
+        <div class="how-intro">
+          <div class="badge how-intro-badge">How It Works</div>
+          <h2 class="how-intro-heading section-title">Spatial and Inline</h2>
+          <p class="how-intro-body">Clippy integrates with macOS window servers and system pasteboard to automate your copying workflow.</p>
+        </div>
+
+        <div class="how-stepper">
+          <!-- Left: Steps -->
+          <div class="how-steps-left">
+            <button class="how-step active" data-step="1" onclick="setHowStep(1)">
+              <div class="how-step-num">Step 01</div>
+              <h3>Hardware Notch Alignment</h3>
+              <div class="how-step-body">
+                <p>Clippy queries CoreGraphics display metrics to physically anchor its shelf inside the MacBook notch bezel, adapting seamlessly to any display scale.</p>
+              </div>
+            </button>
+
+            <button class="how-step" data-step="2" onclick="setHowStep(2)">
+              <div class="how-step-num">Step 02</div>
+              <h3>Sequential Queue Stream</h3>
+              <div class="how-step-body">
+                <p>Copy multiple values across spreadsheets, tickets, and docs. Clippy stacks them in an ordered FIFO queue ready for rapid-fire ⌘⌥V pasting.</p>
+              </div>
+            </button>
+
+            <button class="how-step" data-step="3" onclick="setHowStep(3)">
+              <div class="how-step-num">Step 03</div>
+              <h3>Multi-Format Synthesis</h3>
+              <div class="how-step-body">
+                <p>Select multiple snippets and merge them into SQL clauses, JSON lists, CSV lines, or compare two versions side-by-side with visual Myers diffing.</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- Right: Interactive SVG Schematic -->
+          <div class="how-illustration">
+            <div class="how-graphic">
+              <!-- Schematic 1 -->
+              <div class="card-content active" data-content="1">
+                <svg viewBox="0 0 400 360" fill="none" class="w-full h-auto">
+                  <rect x="10" y="10" width="380" height="340" rx="8" stroke="var(--border)" stroke-dasharray="4 4" />
+                  <!-- MacBook Bezel Outline -->
+                  <path d="M40 50 H360 V280 H40 Z" fill="#0d0e14" stroke="var(--border)" stroke-width="2" />
+                  <!-- Notch Cutout -->
+                  <path d="M150 50 H250 V84 C250 94 242 102 232 102 H168 C158 102 150 94 150 84 Z" fill="#000" stroke="var(--primary)" stroke-width="2" />
+                  <circle cx="200" cy="74" r="5" fill="var(--primary)" />
+                  <path d="M200 102 V160" stroke="var(--primary)" stroke-width="2" stroke-dasharray="3 3" />
+                  <!-- Dynamic Island Shelf Drop -->
+                  <rect x="100" y="160" width="200" height="70" rx="12" fill="#141824" stroke="var(--primary)" stroke-width="1.5" />
+                  <text x="200" y="195" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="bold" fill="var(--paper)">NOTCH SHELF (120Hz)</text>
+                  <text x="200" y="215" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--primary)">Spatial CoreGraphics Alignment</text>
+                </svg>
+              </div>
+
+              <!-- Schematic 2 -->
+              <div class="card-content" data-content="2">
+                <svg viewBox="0 0 400 360" fill="none" class="w-full h-auto">
+                  <rect x="10" y="10" width="380" height="340" rx="8" stroke="var(--border)" stroke-dasharray="4 4" />
+                  <!-- Queue Pipeline Blocks -->
+                  <g transform="translate(50, 40)">
+                    <rect width="300" height="48" rx="6" fill="#11131a" stroke="var(--border)" />
+                    <text x="20" y="28" font-family="var(--font-mono)" font-size="11" fill="var(--paper)">01. User Token</text>
+                    <text x="260" y="28" font-family="var(--font-mono)" font-size="10" fill="var(--primary)">HEAD</text>
+                  </g>
+                  <g transform="translate(50, 100)">
+                    <rect width="300" height="48" rx="6" fill="#11131a" stroke="var(--border)" />
+                    <text x="20" y="28" font-family="var(--font-mono)" font-size="11" fill="var(--paper)">02. Client Email</text>
+                    <text x="250" y="28" font-family="var(--font-mono)" font-size="10" fill="var(--paper-dim)">SLOT 2</text>
+                  </g>
+                  <g transform="translate(50, 160)">
+                    <rect width="300" height="48" rx="6" fill="#11131a" stroke="var(--border)" />
+                    <text x="20" y="28" font-family="var(--font-mono)" font-size="11" fill="var(--paper)">03. Invoice ID</text>
+                    <text x="250" y="28" font-family="var(--font-mono)" font-size="10" fill="var(--paper-dim)">SLOT 3</text>
+                  </g>
+                  <!-- Pop Action -->
+                  <g transform="translate(50, 230)">
+                    <rect width="300" height="64" rx="8" fill="rgba(237, 70, 45, 0.1)" stroke="var(--primary)" stroke-width="1.5" />
+                    <text x="150" y="32" text-anchor="middle" font-family="var(--font-mono)" font-size="12" font-weight="bold" fill="var(--primary)">POPPING VIA ⌘⌥V</text>
+                    <text x="150" y="48" text-anchor="middle" font-family="var(--font-mono)" font-size="9" fill="var(--paper)">Direct simulation into active focus element</text>
+                  </g>
+                </svg>
+              </div>
+
+              <!-- Schematic 3 -->
+              <div class="card-content" data-content="3">
+                <svg viewBox="0 0 400 360" fill="none" class="w-full h-auto">
+                  <rect x="10" y="10" width="380" height="340" rx="8" stroke="var(--border)" stroke-dasharray="4 4" />
+                  <!-- Synthesis Diagram -->
+                  <rect x="50" y="50" width="130" height="60" rx="6" fill="#141720" stroke="var(--border)" />
+                  <text x="115" y="75" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--paper)">Item A: 'admin'</text>
+                  <text x="115" y="95" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--paper)">Item B: 'editor'</text>
+
+                  <rect x="220" y="50" width="130" height="60" rx="6" fill="#141720" stroke="var(--border)" />
+                  <text x="285" y="75" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--paper)">Item C: 'viewer'</text>
+                  <text x="285" y="95" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--paper)">Item D: 'guest'</text>
+
+                  <path d="M115 110 V160 H200" stroke="var(--primary)" stroke-width="1.5" />
+                  <path d="M285 110 V160 H200" stroke="var(--primary)" stroke-width="1.5" />
+                  <path d="M200 160 V200" stroke="var(--primary)" stroke-width="2" />
+
+                  <!-- Combined output -->
+                  <g transform="translate(40, 200)">
+                    <rect width="320" height="90" rx="8" fill="#0f1118" stroke="var(--primary)" stroke-width="1.5" />
+                    <text x="160" y="30" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="bold" fill="var(--primary)">SYNTHESIZED SQL IN CLAUSE</text>
+                    <rect x="15" y="42" width="290" height="34" rx="4" fill="#000" />
+                    <text x="160" y="64" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="#4ade80">IN ('admin', 'editor', 'viewer', 'guest')</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Script for How-It-Works Tab Switching -->
+    <script is:inline>
+      function setHowStep(step) {
+        document.querySelectorAll(".how-step").forEach((btn, idx) => {
+          if (idx + 1 === step) {
+            btn.classList.add("active");
+          } else {
+            btn.classList.remove("active");
+          }
+        });
+
+        document.querySelectorAll(".card-content").forEach((card) => {
+          if (card.dataset.content === String(step)) {
+            card.classList.add("active");
+          } else {
+            card.classList.remove("active");
+          }
+        });
+      }
+    </script>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 5: OFFICIAL PRODUCT DEMO VIDEO SHOWCASE
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="offline-section" id="walkthrough-video">
+      <div class="container">
+        <div class="intro-headline-wrap mb-8">
+          <div class="badge">Walkthrough</div>
+          <h2 class="display intro-title">See Clippy in Action</h2>
+          <p class="intro-desc">Watch the 43-second official product launch walkthrough showing the shelf, queue pasting, and notch drop zone.</p>
+        </div>
+
+        <div class="relative mx-auto max-w-4xl rounded-xl bg-[#0e1017] p-3 sm:p-5 border border-white/10 shadow-2xl">
+          <!-- Window Titlebar -->
+          <div class="flex items-center justify-between pb-3 px-2 border-b border-white/10 mb-3 font-mono text-xs text-zinc-400">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-[#FF5F56] inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-[#FFBD2E] inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-[#27C93F] inline-block"></span>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-[11px] text-zinc-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Clippy Launch Walkthrough • 43s HD</span>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-white/10 text-[10px]">macOS</span>
+          </div>
+
+          <!-- Video Element -->
+          <div class="relative bg-black rounded-lg overflow-hidden border border-white/10">
+            <video
+              src="/1004.mp4"
+              poster="/video_preview.jpg"
+              controls
+              playsinline
+              loop
+              muted
+              class="w-full h-auto aspect-video object-cover"
+            ></video>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 6: SPECIFICATIONS & COMPATIBILITY ("Works With Your Stack")
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="setup-section" id="specs">
+      <div class="container">
+        <header class="setup-heading">
+          <div class="badge">Specifications</div>
+          <h2 class="display">Engineered for Modern Mac Hardware</h2>
+        </header>
+
+        <ol class="setup-steps">
+          <li>
+            <div class="step-number">01 / CLONE</div>
+            <h3>Clone the Repository</h3>
+            <p>Clone the open-source Swift codebase onto your Mac directly from GitHub.</p>
+          </li>
+          <li>
+            <div class="step-number">02 / BUILD & RUN</div>
+            <h3>Build with Xcode or CLI</h3>
+            <p>Open <code>clippy.xcodeproj</code> in Xcode and hit ⌘ R to run, or compile locally with Swift Package Manager.</p>
+          </li>
+          <li>
+            <div class="step-number">03 / PERMISSION</div>
+            <h3>Grant Accessibility</h3>
+            <p>Enables Clippy to simulate keystrokes for direct sequential queue pasting (⌘⌥V) directly into target apps.</p>
+          </li>
+        </ol>
+
+        <div class="cli-note">
+          <span class="text-primary font-bold">›_</span>
+          <span>git clone https://github.com/pawanbhayde/clippy.git && cd clippy && open clippy.xcodeproj</span>
+        </div>
+
+        <div class="stack-strip">
+          <h3>Works With Your Stack</h3>
+          <div class="stack-grid">
+            <div class="stack-group">
+              <h4>System & Hardware</h4>
+              <div class="stack-items">
+                <span class="stack-item"><span>macOS 14+ Sonoma</span></span>
+                <span class="stack-item"><span>macOS 15+ Sequoia</span></span>
+                <span class="stack-item"><span>Apple Silicon M1-M4</span></span>
+                <span class="stack-item"><span>Intel x86_64</span></span>
+              </div>
+            </div>
+
+            <div class="stack-group">
+              <h4>Developer Editors</h4>
+              <div class="stack-items">
+                <span class="stack-item"><span>Xcode</span></span>
+                <span class="stack-item"><span>VS Code</span></span>
+                <span class="stack-item"><span>Cursor</span></span>
+                <span class="stack-item"><span>Terminal</span></span>
+              </div>
+            </div>
+
+            <div class="stack-group">
+              <h4>Productivity Apps</h4>
+              <div class="stack-items">
+                <span class="stack-item"><span>Linear</span></span>
+                <span class="stack-item"><span>Slack</span></span>
+                <span class="stack-item"><span>Notion</span></span>
+                <span class="stack-item"><span>Figma</span></span>
+              </div>
+            </div>
+
+            <div class="stack-group">
+              <h4>Keybindings</h4>
+              <div class="stack-items">
+                <span class="stack-item"><span>⌘ ⇧ V (Shelf)</span></span>
+                <span class="stack-item"><span>⌘ ⌥ V (Queue)</span></span>
+                <span class="stack-item"><span>⏎ (Direct Paste)</span></span>
+                <span class="stack-item"><span>Space (Quick Look)</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         SECTION 7: FAQ ACCORDION
+         ══════════════════════════════════════════════════════════════ -->
+    <section class="faq-section" id="faq">
+      <div class="container">
+        <div class="badge faq-badge">FAQ</div>
+        <h2 class="section-title faq-title">Frequently Asked Questions</h2>
+
+        <div class="faq-list">
+          <!-- Item 1 -->
+          <details class="faq-item" open>
+            <summary class="faq-question">
+              <span class="faq-question-number mono-label">01</span>
+              <span class="faq-question-text">Does Clippy require internet or cloud access?</span>
+              <span class="faq-chevron" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <div class="faq-answer">
+                <p>No. Clippy is 100% offline with zero network entitlements in its sandboxed macOS profile. Your clips, passwords, and tokens never leave your local machine, and OCR runs strictly through the on-device Apple Neural Engine.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Item 2 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span class="faq-question-number mono-label">02</span>
+              <span class="faq-question-text">How does the Sequential Paste Queue (⌘⌥V) work?</span>
+              <span class="faq-chevron" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <div class="faq-answer">
+                <p>When you copy multiple items with queue mode active (or push clips into the queue), they stack in FIFO order. Every time you press ⌘⌥V in any text input, Clippy pastes the next item and advances the queue automatically without needing to switch windows.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Item 3 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span class="faq-question-number mono-label">03</span>
+              <span class="faq-question-text">Does Clippy work on external displays or Macs without a notch?</span>
+              <span class="faq-chevron" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <div class="faq-answer">
+                <p>Yes! On external 4K/5K monitors, Mac mini, Mac Studio, or iMacs, Clippy adapts into a sleek floating Dynamic Island capsule anchored gracefully at the top center of your active screen.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Item 4 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span class="faq-question-number mono-label">04</span>
+              <span class="faq-question-text">How are passwords and sensitive credentials protected?</span>
+              <span class="faq-chevron" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <div class="faq-answer">
+                <p>Clippy automatically respects standard concealed clipboard markers from 1Password, Bitwarden, KeePassXC, and Apple Passwords. Sensitive values are encrypted on-device with AES-256-GCM via the Apple Keychain, with automatic masking in previews.</p>
+              </div>
+            </div>
+          </details>
+
+          <!-- Item 5 -->
+          <details class="faq-item">
+            <summary class="faq-question">
+              <span class="faq-question-number mono-label">05</span>
+              <span class="faq-question-text">Is Clippy free and open source?</span>
+              <span class="faq-chevron" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </summary>
+            <div class="faq-answer-wrap">
+              <div class="faq-answer">
+                <p>Yes. Clippy is licensed under the permissive MIT license on GitHub. You can inspect the complete Swift source code, contribute features, or compile the Xcode project yourself.</p>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       SECTION 8: BOTTOM CTA WITH FLOWING WAVE GRID & BLOOM
+       ══════════════════════════════════════════════════════════════ -->
+  <section class="cta-section" id="download">
+    <!-- Animated SVG Wave Grid with Glowing Flow Dots -->
+    <div class="cta-grid-wrap" aria-hidden="true">
+      <svg class="cta-grid" viewBox="0 0 2372 814" fill="none">
+        <image href="/assets/cta-wave-grid.svg" width="2372" height="814" class="grid-lines"></image>
+        
+        <g style="--flow-delay: 0s; --flow-duration: 14s">
+          <path class="flow-tail" d="M32 730 C160 730 417 732 1187 730 C1387 687 1552 620 1707 575 C1840 553 2083 650 2342 728" pathLength="100"></path>
+          <path class="flow-dot flow-halo" d="M32 730 C160 730 417 732 1187 730 C1387 687 1552 620 1707 575 C1840 553 2083 650 2342 728" pathLength="100"></path>
+          <path class="flow-dot flow-core" d="M32 730 C160 730 417 732 1187 730 C1387 687 1552 620 1707 575 C1840 553 2083 650 2342 728" pathLength="100"></path>
+        </g>
+
+        <g style="--flow-delay: -3s; --flow-duration: 16s">
+          <path class="flow-tail" d="M62 653 H660 C833 655 1188 652 1487 483 C1622 363 1702 333 1985 411 C2147 544 2315 642" pathLength="100"></path>
+          <path class="flow-dot flow-halo" d="M62 653 H660 C833 655 1188 652 1487 483 C1622 363 1702 333 1985 411 C2147 544 2315 642" pathLength="100"></path>
+          <path class="flow-dot flow-core" d="M62 653 H660 C833 655 1188 652 1487 483 C1622 363 1702 333 1985 411 C2147 544 2315 642" pathLength="100"></path>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Oversized Clippy Notch Silhouette -->
+    <svg class="cta-oversized-svg" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+      <rect x="20" y="40" width="160" height="120" rx="30" stroke="rgba(240, 237, 230, 0.08)" stroke-width="1" />
+      <path d="M70 40 H130 V70 C130 80 120 90 110 90 H90 C80 90 70 80 70 70 Z" stroke="rgba(240, 237, 230, 0.08)" stroke-width="1" />
+    </svg>
+
+    <div class="container cta-container">
+      <!-- Bloom Glow Filter for Logo -->
+      <svg class="cta-bloom-filter" aria-hidden="true">
+        <defs>
+          <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="glow-wide"></feGaussianBlur>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="glow-tight"></feGaussianBlur>
+            <feComposite in="SourceGraphic" in2="glow-wide" operator="arithmetic" k1="0" k2="1" k3="0.5" k4="0" result="with-wide"></feComposite>
+            <feComposite in="with-wide" in2="glow-tight" operator="arithmetic" k1="0" k2="1" k3="0.3" k4="0"></feComposite>
+          </filter>
+        </defs>
+      </svg>
+
+      <!-- Center Logo with Bloom Glow -->
+      <div class="cta-logo-wrap">
+        <img src="/icon.png" alt="Clippy" class="cta-logo-glow" />
+        <img src="/icon.png" alt="Clippy" class="cta-logo" />
+      </div>
+
+      <!-- Glitch Heading -->
+      <div class="cta-heading-wrap">
+        <div class="cta-heading-blur"></div>
+        <h2 class="glitch-text" data-text="Elevate Your Mac">Elevate Your Mac</h2>
+      </div>
+
+      <!-- Chamfered CTA Action Buttons -->
+      <div class="cta-btn-wrap flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="https://github.com/pawanbhayde/clippy"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-chamfer btn-cta cta-btn sm:!w-auto"
+        >
+          <svg class="w-5 h-5 fill-current inline-block" viewBox="0 0 24 24">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"></path>
+          </svg>
+          <span>Get Clippy on GitHub</span>
+          <span class="opacity-70 font-normal">★ 1.4k</span>
+        </a>
+
+        <button
+          type="button"
+          class="btn-chamfer btn-dark !py-[1.65rem] !px-8 text-sm"
+          id="cta-clone-btn"
+          onclick="navigator.clipboard.writeText('git clone https://github.com/pawanbhayde/clippy.git && cd clippy && open clippy.xcodeproj'); const el = document.getElementById('cta-clone-text'); el.innerText = 'Copied Clone Command!'; setTimeout(() => el.innerText = 'git clone ... clippy.xcodeproj', 2200);"
+        >
+          <span class="opacity-60 font-mono">$</span>
+          <span id="cta-clone-text">git clone ... clippy.xcodeproj</span>
+        </button>
+      </div>
+
+      <div class="mt-6 font-mono text-xs text-zinc-400">
+        macOS 14.0+ Sonoma & 15.0+ Sequoia &bull; Apple Silicon & Intel &bull; Free & Open Source under MIT
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════════════ -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="flex items-center gap-3">
+            <img src="/icon.png" alt="Clippy" class="w-6 h-6 rounded border border-white/20" />
+            <span class="font-display font-bold text-lg text-white">CLIPPY</span>
+          </div>
+          <p>
+            The supercharged Dynamic Island and camera notch clipboard manager for modern macOS. Handcrafted in Swift & AppKit.
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="mono-label">Navigation</h3>
+          <ul>
+            <li><a href="#the-problem">The Problem</a></li>
+            <li><a href="#intro-clippy">Notch Shelf</a></li>
+            <li><a href="#difference">Architecture</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#specs">Specifications</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3 class="mono-label">Open Source</h3>
+          <ul>
+            <li><a href="https://github.com/pawanbhayde/clippy" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+            <li><a href="https://github.com/pawanbhayde/clippy/releases" target="_blank" rel="noopener noreferrer">Releases & Changelog</a></li>
+            <li><a href="https://github.com/pawanbhayde/clippy/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing Guide</a></li>
+            <li><a href="https://github.com/pawanbhayde/clippy/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="mono-label">&copy; 2026 Clippy. Open Source under the MIT License.</span>
+        <div class="status footer-status">
+          <span class="footer-status-dot"></span>
+          <span>100% on-device &bull; zero telemetry</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+</Layout>
